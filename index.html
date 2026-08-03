@@ -195,7 +195,10 @@ header.clickable{cursor:pointer}
 .home-hero{background:linear-gradient(135deg,#12305a,#1a1233);border:1px solid rgba(77,163,255,.2);
   border-radius:var(--radius);padding:20px 18px;margin-bottom:14px}
 .home-hero .hh-title{font-size:22px;font-weight:800}
-.home-hero .hh-sub{font-size:13px;color:var(--muted);margin-top:4px}
+.home-hero .hero-logo{width:78%;max-width:280px;height:auto;display:block;margin:2px auto 10px;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.home-hero .hh-tag{font-size:13px;font-weight:700;color:#e7d9b8;font-style:italic;letter-spacing:.2px}
+.home-hero .hh-sub{font-size:12.5px;color:var(--muted);margin-top:3px}
 .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}
 .home-btn{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid rgba(255,255,255,.07);
   border-radius:15px;padding:15px 14px;cursor:pointer;text-align:left;color:var(--text);transition:.12s}
@@ -899,7 +902,7 @@ function wireClock(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="2.2";
+const APP_VERSION="2.3";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -929,9 +932,10 @@ function renderHome(){
   }
   const btn=(tab,label,sub)=>`<button class="home-btn" onclick="setTab('${tab}')"><svg viewBox="0 0 24 24">${ICON[tab]}</svg><div><div class="t">${label}</div><div class="s">${sub}</div></div></button>`;
   views.home.innerHTML=`
-   <div class="home-hero">
-     <div class="hh-title">The Mother of All Relays</div>
-     <div class="hh-sub">197 miles · Mt. Hood → Seaside · 36 legs · Aug 2026</div>
+   <div class="home-hero" style="text-align:center">
+     <img class="hero-logo" src="./logo.svg" alt="The Last Milers — 2026 Hood To Coast">
+     <div class="hh-tag">The Mother of All Relays</div>
+     <div class="hh-sub">197 miles · Mt. Hood → Seaside · 36 legs</div>
    </div>
    <div id="updateSlot"></div>
    ${nowCard}

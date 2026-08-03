@@ -1,9 +1,10 @@
 /* HTC 2026 Driver Guide — offline service worker */
-const CACHE = 'htc26-v4';
+const CACHE = 'htc26-v5';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './logo.svg',
   './seaside-parking.png',
   './icon-192.png',
   './icon-512.png',
