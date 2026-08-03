@@ -11,7 +11,7 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" href="./icon-192.png">
-<title>HTC 2026 Driver Guide</title>
+<title>HTC 2026 · Team Last Milers</title>
 <style>
 :root{
   --bg:#0b1220; --bg2:#131c2e; --card:#182338; --card2:#1f2c45;
@@ -214,7 +214,7 @@ header.clickable{cursor:pointer}
 <header id="appHeader" class="clickable">
   <div class="h-row">
     <div>
-      <div class="h-title"><span class="badge">HTC 26</span><span id="h-title-txt">Driver Guide</span></div>
+      <div class="h-title"><span class="badge">HTC 26</span><span id="h-title-txt">Team Last Milers</span></div>
       <div class="h-sub" id="h-sub"><svg class="home-ic" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg>Tap to return home</div>
     </div>
   </div>
@@ -492,7 +492,7 @@ const GEAR = ["Two (2) reflective vests","Two (2) LED flashers","Two flashlights
 /* ============================ APP ============================ */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const views={home:$("#view-home"),legs:$("#view-legs"),detail:$("#view-detail"),clock:$("#view-clock"),course:$("#view-course"),rules:$("#view-rules"),safety:$("#view-safety"),prep:$("#view-prep")};
-const titles={home:"Driver Guide",legs:"Driver Guide",clock:"Race Clock",course:"Course",rules:"Race Rules",safety:"Safety",prep:"Prep & Checklists"};
+const titles={home:"Team Last Milers",legs:"Team Last Milers",clock:"Race Clock",course:"Course",rules:"Race Rules",safety:"Safety",prep:"Prep & Checklists"};
 let curTab="legs", curVan="all", curSearch="";
 
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
@@ -899,7 +899,7 @@ function wireClock(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="2.1";
+const APP_VERSION="2.2";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -912,7 +912,7 @@ function goHome(){
   Object.values(views).forEach(v=>v.classList.add("hidden"));
   views.home.classList.remove("hidden");
   $$("#tabbar button").forEach(b=>b.classList.remove("active"));
-  $("#h-title-txt").textContent="Driver Guide";
+  $("#h-title-txt").textContent="Team Last Milers";
   renderHome(); window.scrollTo(0,0);
 }
 function renderHome(){
