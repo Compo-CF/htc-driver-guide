@@ -187,21 +187,42 @@ tr.doner td{color:var(--muted2)}
 .van-chip{font-size:10px;font-weight:800;padding:1px 5px;border-radius:5px;color:#fff;background:var(--accent2)}
 .van-chip.v2{background:#8b5cf6}
 img.mapimg{width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.1);display:block;background:#fff}
+/* home */
+header.clickable{cursor:pointer}
+.home-hero{background:linear-gradient(135deg,#12305a,#1a1233);border:1px solid rgba(77,163,255,.2);
+  border-radius:var(--radius);padding:20px 18px;margin-bottom:14px}
+.home-hero .hh-title{font-size:22px;font-weight:800}
+.home-hero .hh-sub{font-size:13px;color:var(--muted);margin-top:4px}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}
+.home-btn{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid rgba(255,255,255,.07);
+  border-radius:15px;padding:15px 14px;cursor:pointer;text-align:left;color:var(--text);transition:.12s}
+.home-btn:active{transform:scale(.97);background:var(--card2)}
+.home-btn svg{width:24px;height:24px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.home-btn .t{font-size:15px;font-weight:800}
+.home-btn .s{font-size:11.5px;color:var(--muted);margin-top:1px}
+.update-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:linear-gradient(135deg,#1f5a3a,#183a2c);border:1px solid rgba(55,201,138,.4);border-radius:13px;
+  padding:12px 14px;margin-bottom:12px;font-size:13.5px;font-weight:700;color:#c9f7e0}
+.update-banner button{background:var(--e);color:#06231a;border:0;border-radius:9px;padding:8px 14px;font-weight:800;font-size:13px;cursor:pointer}
+.home-ic{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:-2px;margin-right:3px;opacity:.7}
 </style>
 </head>
 <body>
-<header>
+<header id="appHeader" class="clickable">
   <div class="h-row">
     <div>
       <div class="h-title"><span class="badge">HTC 26</span><span id="h-title-txt">Driver Guide</span></div>
-      <div class="h-sub" id="h-sub">Hood To Coast · Mt. Hood → Seaside · 197 mi · 36 legs</div>
+      <div class="h-sub" id="h-sub"><svg class="home-ic" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg>Tap to return home</div>
     </div>
   </div>
 </header>
 
 <main>
+  <!-- HOME -->
+  <section class="view" id="view-home"></section>
+
   <!-- LEGS -->
-  <section class="view" id="view-legs">
+  <section class="view hidden" id="view-legs">
     <div class="searchbar"><input id="legSearch" type="search" inputmode="search" placeholder="Search legs, exchanges, roads…"></div>
     <div class="segbar" id="vanSeg">
       <button data-van="all" class="active">All 36</button>
@@ -467,8 +488,8 @@ const GEAR = ["Two (2) reflective vests","Two (2) LED flashers","Two flashlights
 
 /* ============================ APP ============================ */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const views={legs:$("#view-legs"),detail:$("#view-detail"),clock:$("#view-clock"),course:$("#view-course"),rules:$("#view-rules"),safety:$("#view-safety"),prep:$("#view-prep")};
-const titles={legs:"Driver Guide",clock:"Race Clock",course:"Course",rules:"Race Rules",safety:"Safety",prep:"Prep & Checklists"};
+const views={home:$("#view-home"),legs:$("#view-legs"),detail:$("#view-detail"),clock:$("#view-clock"),course:$("#view-course"),rules:$("#view-rules"),safety:$("#view-safety"),prep:$("#view-prep")};
+const titles={home:"Driver Guide",legs:"Driver Guide",clock:"Race Clock",course:"Course",rules:"Race Rules",safety:"Safety",prep:"Prep & Checklists"};
 let curTab="legs", curVan="all", curSearch="";
 
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
@@ -874,6 +895,98 @@ function wireClock(){
   };
 }
 
+/* ---- Home ---- */
+const APP_VERSION="2.1";
+const ICON={
+  legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  course:'<path d="M3 6h18M3 12h18M3 18h18"/>',
+  rules:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/>',
+  safety:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
+  prep:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'
+};
+function goHome(){
+  Object.values(views).forEach(v=>v.classList.add("hidden"));
+  views.home.classList.remove("hidden");
+  $$("#tabbar button").forEach(b=>b.classList.remove("active"));
+  $("#h-title-txt").textContent="Driver Guide";
+  renderHome(); window.scrollTo(0,0);
+}
+function renderHome(){
+  const st=startMs();
+  let nowCard="";
+  if(st){
+    const el=(Date.now()-st)/60000;
+    if(el>=0 && el<legEndMin(36)){
+      const cur=LEGS.find(l=>el>=legStartMin(l.n)&&el<legEndMin(l.n));
+      if(cur){const li=LEGINFO[cur.n];
+        nowCard=`<div class="card" style="cursor:pointer" onclick="setTab('clock')"><h3>⏱ On course now</h3>
+          <p>Van ${li.van} · Runner ${li.runner} · <b>Leg ${cur.n}</b> — next exchange ETA <b>${fmtClock(st+legEndMin(cur.n)*60000)}</b>. Tap for the race clock ›</p></div>`;}
+    }
+  }
+  const btn=(tab,label,sub)=>`<button class="home-btn" onclick="setTab('${tab}')"><svg viewBox="0 0 24 24">${ICON[tab]}</svg><div><div class="t">${label}</div><div class="s">${sub}</div></div></button>`;
+  views.home.innerHTML=`
+   <div class="home-hero">
+     <div class="hh-title">The Mother of All Relays</div>
+     <div class="hh-sub">197 miles · Mt. Hood → Seaside · 36 legs · Aug 2026</div>
+   </div>
+   <div id="updateSlot"></div>
+   ${nowCard}
+   <div class="home-grid">
+     ${btn('legs','Legs','All 36 · GPS & directions')}
+     ${btn('course','Course','Map, difficulty, parking')}
+     ${btn('rules','Rules','Penalties & traffic')}
+     ${btn('safety','Safety','Emergency & night gear')}
+     ${btn('clock','Race Clock','Who’s running now')}
+     ${btn('prep','Prep','Checklists & rotation')}
+   </div>
+   <div class="card">
+     <h3>App updates</h3>
+     <button class="btn-primary" id="checkUpd">🔄 Check for updates</button>
+     <p class="small" id="updStatus" style="margin:10px 2px 2px;min-height:18px;color:var(--muted)"></p>
+     <p class="muted small">Version ${APP_VERSION}. Auto-checks for new features when you have signal; uses your saved copy when you don’t — no action needed.</p>
+   </div>
+   <div class="foot">Unofficial offline driver reference · built from the HTC 2026 Driver Handbook.<br>Verify against the official Hood To Coast handbook & app before race day.</div>`;
+  $("#checkUpd").onclick=()=>checkForUpdate(true);
+  renderUpdateSlot();
+}
+
+/* ---- Updates (auto when online, silent local fallback) ---- */
+let _updateReady=false, _manualReload=false;
+function updStatus(m){const e=$("#updStatus");if(e)e.textContent=m;}
+function renderUpdateSlot(){
+  const slot=$("#updateSlot");if(!slot)return;
+  slot.innerHTML=_updateReady?`<div class="update-banner"><span>✨ A new version is ready.</span><button id="reloadNow">Update now</button></div>`:"";
+  const r=$("#reloadNow");if(r)r.onclick=doReload;
+}
+function doReload(){
+  _manualReload=true;
+  navigator.serviceWorker.getRegistration().then(reg=>{
+    if(reg&&reg.waiting){reg.waiting.postMessage("skipWaiting");}else{location.reload();}
+  });
+}
+async function checkForUpdate(manual){
+  if(!("serviceWorker" in navigator)){if(manual)updStatus("Updates aren’t supported in this browser.");return;}
+  if(!navigator.onLine){if(manual)updStatus("No signal — you’re using your saved copy. ✓");return;}
+  const reg=await navigator.serviceWorker.getRegistration();
+  if(!reg){if(manual)updStatus("Open once more to finish setup, then updates will work.");return;}
+  if(manual)updStatus("Checking GitHub…");
+  try{
+    await reg.update();
+    await new Promise(r=>setTimeout(r,1600));
+    if(reg.waiting){_updateReady=true;renderUpdateSlot();if(manual){updStatus("Update found — applying…");doReload();}}
+    else if(reg.installing){
+      if(manual)updStatus("Downloading update…");
+      reg.installing.addEventListener("statechange",function(){
+        if(this.state==="installed"){_updateReady=true;renderUpdateSlot();if(manual){updStatus("Update found — applying…");doReload();}}
+      });
+    } else {if(manual)updStatus("You’re on the latest version. ✓");}
+  }catch(e){if(manual)updStatus("Couldn’t reach GitHub — using your saved copy. ✓");}
+}
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(_manualReload){_manualReload=false;location.reload();}});
+}
+
 /* ---- Nav wiring ---- */
 $$("#tabbar button").forEach(b=>b.onclick=()=>{
   const t=b.dataset.tab;
@@ -890,11 +1003,18 @@ $$("#vanSeg button").forEach(b=>b.onclick=()=>{
   curVan=b.dataset.van;renderLegs();
 });
 
-renderLegs();
+$("#appHeader").onclick=goHome;
 
-/* ---- Service worker (offline) ---- */
+renderLegs();
+renderHome();   // land on Home
+
+/* ---- Service worker (offline + auto-update) ---- */
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js')
+      .then(()=>setTimeout(()=>checkForUpdate(false),2500))  // silent auto-check when online
+      .catch(()=>{});
+  });
 }
 </script>
 </body>
