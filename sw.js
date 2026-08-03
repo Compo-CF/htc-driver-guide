@@ -1,5 +1,5 @@
 /* HTC 2026 Driver Guide — offline service worker */
-const CACHE = 'htc26-v3';
+const CACHE = 'htc26-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -11,9 +11,12 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', e => {
-  // Precache everything. Do NOT skipWaiting here — the new version waits until
-  // the page tells it to (so it never reloads out from under someone mid-use).
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  // Precache everything, fetching FRESH from the network (cache:'reload' bypasses the
+  // browser HTTP cache) so a new version never caches stale files. Do NOT skipWaiting
+  // here — the new version waits until the page tells it to (never reloads mid-use).
+  e.waitUntil(caches.open(CACHE).then(c =>
+    c.addAll(ASSETS.map(u => new Request(u, { cache: 'reload' })))
+  ));
 });
 
 self.addEventListener('activate', e => {
