@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HTC Driver">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png">
+<title>HTC 2026 Driver Guide</title>
+<style>
+:root{
+  --bg:#0b1220; --bg2:#131c2e; --card:#182338; --card2:#1f2c45;
+  --line:#2a3856; --text:#eaf0fb; --muted:#93a2c0; --muted2:#6b7a99;
+  --accent:#4da3ff; --accent2:#2b6fd6;
+  --e:#37c98a; --m:#4da3ff; --h:#ff9f43; --vh:#ff5d5d;
+  --safe:#37c98a; --warn:#ffcf5c; --danger:#ff5d5d;
+  --radius:16px; --tabh:64px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-text-size-adjust:100%;overscroll-behavior-y:none}
+body{padding-bottom:calc(var(--tabh) + var(--safe-bot))}
+a{color:var(--accent);text-decoration:none}
+button{font-family:inherit}
+.hidden{display:none!important}
+
+/* Header */
+header{position:sticky;top:0;z-index:20;background:rgba(11,18,32,.92);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  padding:calc(var(--safe-top) + 10px) 16px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.h-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.h-title{font-size:19px;font-weight:800;letter-spacing:.2px;display:flex;align-items:center;gap:9px}
+.h-title .badge{background:linear-gradient(135deg,#ff7a45,#ff5d5d);color:#fff;font-size:11px;
+  font-weight:800;padding:3px 8px;border-radius:999px;letter-spacing:.5px}
+.h-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+/* Views */
+main{padding:14px 14px 20px;max-width:760px;margin:0 auto}
+.view{animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+h2.sec{font-size:15px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+  margin:22px 4px 10px;font-weight:700}
+h2.sec:first-child{margin-top:4px}
+
+/* Cards */
+.card{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);
+  padding:15px 16px;margin-bottom:12px}
+.card h3{margin:0 0 8px;font-size:16px;font-weight:700}
+.card p{margin:7px 0;font-size:14.5px;line-height:1.5;color:#dce4f4}
+.card ul{margin:7px 0;padding-left:20px}
+.card li{font-size:14.5px;line-height:1.55;margin:5px 0;color:#dce4f4}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+
+/* Search + filter */
+.searchbar{display:flex;gap:8px;margin-bottom:12px}
+.searchbar input{flex:1;background:var(--card);border:1px solid rgba(255,255,255,.09);
+  color:var(--text);border-radius:12px;padding:12px 14px;font-size:16px;outline:none}
+.searchbar input::placeholder{color:var(--muted2)}
+.segbar{display:flex;background:var(--card);border-radius:12px;padding:4px;margin-bottom:14px;
+  gap:4px;border:1px solid rgba(255,255,255,.06)}
+.segbar button{flex:1;background:transparent;border:0;color:var(--muted);font-size:13.5px;
+  font-weight:700;padding:9px 6px;border-radius:9px;transition:.15s}
+.segbar button.active{background:var(--accent2);color:#fff}
+
+/* Leg list */
+.leg-item{display:flex;align-items:center;gap:12px;background:var(--card);
+  border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:13px 14px;margin-bottom:9px;
+  cursor:pointer;transition:.12s}
+.leg-item:active{transform:scale(.985);background:var(--card2)}
+.leg-num{min-width:42px;height:42px;border-radius:11px;display:flex;align-items:center;
+  justify-content:center;font-weight:800;font-size:17px;background:var(--bg2);position:relative}
+.leg-num .van{position:absolute;bottom:-6px;right:-4px;font-size:8.5px;font-weight:800;
+  background:var(--accent2);color:#fff;padding:1px 4px;border-radius:5px}
+.leg-num .van.v2{background:#8b5cf6}
+.leg-body{flex:1;min-width:0}
+.leg-title{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+.leg-meta{font-size:12.5px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.pill{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;letter-spacing:.4px;
+  text-transform:uppercase;color:#0b1220}
+.pill.E{background:var(--e)} .pill.M{background:var(--m)} .pill.H{background:var(--h)} .pill.VH{background:var(--vh);color:#fff}
+.chev{color:var(--muted2);font-size:20px}
+
+/* Detail */
+.detail-head{background:linear-gradient(135deg,var(--card2),var(--card));border-radius:var(--radius);
+  padding:16px;margin-bottom:12px;border:1px solid rgba(255,255,255,.07)}
+.detail-head .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.detail-head h2{margin:0;font-size:22px;font-weight:800}
+.detail-head .ded{font-size:13px;color:var(--muted);margin-top:2px}
+.stats{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.stat{flex:1;min-width:78px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 10px;text-align:center}
+.stat .v{font-size:16px;font-weight:800}
+.stat .l{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.gps-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;
+  padding:14px;border-radius:13px;font-size:15px;font-weight:800;margin-bottom:12px;cursor:pointer}
+.gps-btn:active{opacity:.85}
+.addr{font-size:13.5px;color:var(--muted);margin-top:8px;line-height:1.4}
+.note-box{background:rgba(255,207,92,.1);border:1px solid rgba(255,207,92,.3);border-radius:12px;
+  padding:12px 14px;margin-bottom:12px;font-size:14px;line-height:1.5;color:#ffe9b8}
+.note-box b{color:var(--warn)}
+.note-box.danger{background:rgba(255,93,93,.1);border-color:rgba(255,93,93,.35);color:#ffc9c9}
+.note-box.danger b{color:var(--danger)}
+
+/* directions */
+.dir{display:flex;gap:12px;padding:10px 4px;border-bottom:1px solid rgba(255,255,255,.05)}
+.dir:last-child{border-bottom:0}
+.dir .mi{min-width:46px;font-variant-numeric:tabular-nums;font-weight:700;font-size:13.5px;color:var(--accent);text-align:right}
+.dir .ar{min-width:20px;text-align:center;font-size:15px}
+.dir .tx{flex:1;font-size:14px;line-height:1.4}
+.dir.fin .tx{font-weight:800;color:var(--e)}
+.dir.start .mi{color:var(--muted)}
+.kv{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:14px}
+.kv:last-child{border-bottom:0}
+.kv .k{min-width:92px;color:var(--muted);font-weight:600}
+.kv .v{flex:1}
+
+/* back */
+.backbtn{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--accent);
+  font-size:15px;font-weight:700;padding:4px 0 12px;cursor:pointer}
+
+/* table */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:1px solid rgba(255,255,255,.08)}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:520px}
+th,td{padding:8px 9px;text-align:center;border-bottom:1px solid rgba(255,255,255,.06);white-space:nowrap}
+th{background:var(--bg2);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0}
+td.name{text-align:left;font-weight:600}
+.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:1px}
+.dot.E{background:var(--e)}.dot.M{background:var(--m)}.dot.H{background:var(--h)}.dot.VH{background:var(--vh)}
+
+/* checklist */
+.chk{display:flex;align-items:center;gap:13px;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,.055);cursor:pointer}
+.chk:last-child{border-bottom:0}
+.chk .box{width:24px;height:24px;border-radius:7px;border:2px solid var(--muted2);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:.12s;font-size:15px;color:#fff}
+.chk.done .box{background:var(--e);border-color:var(--e)}
+.chk .lbl{font-size:15px;line-height:1.35}
+.chk.done .lbl{color:var(--muted2);text-decoration:line-through}
+.chk-req .box{border-color:var(--warn)}
+.chk-req.done .box{background:var(--warn);border-color:var(--warn);color:#0b1220}
+.reset{background:var(--card);border:1px solid rgba(255,255,255,.1);color:var(--muted);
+  border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;margin-top:6px;cursor:pointer}
+.progress{font-size:12.5px;color:var(--muted);float:right;font-weight:700}
+
+/* bottom nav */
+nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:rgba(15,23,42,.96);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid rgba(255,255,255,.08);display:flex;
+  padding-bottom:var(--safe-bot);height:calc(var(--tabh) + var(--safe-bot))}
+nav button{flex:1;background:none;border:0;color:var(--muted2);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;font-size:9.5px;font-weight:700;cursor:pointer;padding-top:8px}
+nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav button.active{color:var(--accent)}
+.badge-alert{background:var(--danger);color:#fff;font-size:9px;font-weight:800;border-radius:999px;padding:1px 5px;position:absolute;transform:translate(14px,-8px)}
+
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;
+  background:var(--bg2);color:var(--muted);margin:0 5px 5px 0}
+.divide{height:1px;background:rgba(255,255,255,.07);margin:16px 0}
+.foot{text-align:center;color:var(--muted2);font-size:11.5px;padding:18px 10px 4px;line-height:1.5}
+/* clock */
+.clock-hero{background:linear-gradient(135deg,#12305a,#131c2e);border:1px solid rgba(77,163,255,.25);
+  border-radius:var(--radius);padding:18px 16px;margin-bottom:14px;text-align:center}
+.clock-hero .now{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+.clock-hero .elapsed{font-size:13px;color:var(--muted);margin-top:2px}
+.clock-hero .status{margin-top:12px;font-size:14px;color:#dce4f4}
+.clock-hero .big{font-size:20px;font-weight:800;color:var(--accent);display:block;margin-top:4px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.field input{width:100%;background:var(--bg2);border:1px solid rgba(255,255,255,.12);color:var(--text);
+  border-radius:11px;padding:12px 13px;font-size:16px;outline:none}
+.pace-row{display:flex;gap:8px;align-items:center}
+.pace-row input{flex:1}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;
+  padding:14px;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer;margin-top:4px}
+.sched td.legc{text-align:left;font-weight:600}
+tr.nowrow td{background:rgba(77,163,255,.16);color:#fff;font-weight:800}
+tr.doner td{color:var(--muted2)}
+.van-chip{font-size:10px;font-weight:800;padding:1px 5px;border-radius:5px;color:#fff;background:var(--accent2)}
+.van-chip.v2{background:#8b5cf6}
+img.mapimg{width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.1);display:block;background:#fff}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-row">
+    <div>
+      <div class="h-title"><span class="badge">HTC 26</span><span id="h-title-txt">Driver Guide</span></div>
+      <div class="h-sub" id="h-sub">Hood To Coast · Mt. Hood → Seaside · 197 mi · 36 legs</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- LEGS -->
+  <section class="view" id="view-legs">
+    <div class="searchbar"><input id="legSearch" type="search" inputmode="search" placeholder="Search legs, exchanges, roads…"></div>
+    <div class="segbar" id="vanSeg">
+      <button data-van="all" class="active">All 36</button>
+      <button data-van="1">Van 1</button>
+      <button data-van="2">Van 2</button>
+    </div>
+    <div id="legList"></div>
+  </section>
+
+  <!-- LEG DETAIL -->
+  <section class="view hidden" id="view-detail">
+    <button class="backbtn" id="detailBack">‹ All legs</button>
+    <div id="detailBody"></div>
+  </section>
+
+  <!-- CLOCK -->
+  <section class="view hidden" id="view-clock"></section>
+
+  <!-- COURSE -->
+  <section class="view hidden" id="view-course"></section>
+
+  <!-- RULES -->
+  <section class="view hidden" id="view-rules"></section>
+
+  <!-- SAFETY -->
+  <section class="view hidden" id="view-safety"></section>
+
+  <!-- PREP -->
+  <section class="view hidden" id="view-prep"></section>
+</main>
+
+<nav id="tabbar">
+  <button data-tab="legs" class="active">
+    <svg viewBox="0 0 24 24"><path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/></svg>Legs</button>
+  <button data-tab="clock">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Clock</button>
+  <button data-tab="course">
+    <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="7" cy="6" r="1.6" fill="currentColor" stroke="none"/><circle cx="14" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="18" cy="18" r="1.6" fill="currentColor" stroke="none"/></svg>Course</button>
+  <button data-tab="rules">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>Rules</button>
+  <button data-tab="safety">
+    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>Safety</button>
+  <button data-tab="prep">
+    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Prep</button>
+</nav>
+
+<script>
+/* ============================ DATA ============================ */
+const LEGS = [
+{n:1,van:1,mi:6.26,d:"VH",name:"Lew Johnson",desc:"Severe downhill on paved Timberline Road.",
+ exch:"Exchange 1 — Near HWY 26 & Government Camp Loop, Government Camp, OR 97028",lat:45.304771,lng:-121.759188,
+ danger:"VANS NOT ALLOWED TO STOP ON THIS LEG.",side:"Run on right side of road.",
+ dir:[["0.00","•","Timberline Lodge (Start)"],["5.29","→","RIGHT onto HWY 26"],["5.44","→","RIGHT onto Government Camp Loop"],["6.26","🏁","Exchange 1 (HWY 26/Gov't Camp Loop)"]],
+ park:"On left side of Government Camp Loop; park perpendicular to road. Only next runner in exchange zone.",prov:"Restaurants/Food, Fuel",fuel:"Yes",elev:"0 / −2,036 ft  (net −2,036)"},
+{n:2,van:1,mi:6.05,d:"H",name:"Angela Patton",desc:"Severe downhill through Government Camp on HWY 26; paved street and shoulder.",
+ exch:"Exchange 2 — Rd 35 / HWY 26, Government Camp, OR 97028",lat:45.307884,lng:-121.854509,
+ note:"No stopping in the truck escape ramp (traffic fines). No stopping on left of HWY 26 to water runners.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 1 (Gov't Camp Loop)"],["0.55","→","RIGHT on Government Camp Rd entrance onto HWY 26"],["3.27","↑","Truck Escape Ramp"],["4.74","→","RIGHT on Kiwanis Camp Rd / Rd 39"],["4.90","←","LEFT on Rd 35"],["6.05","🏁","Exchange 2 (Rd 35)"]],
+ park:"Follow volunteer instructions; park to the right BEFORE the exchange only.",prov:"No",fuel:"No",elev:"24 / −1,577 ft  (net −1,553)"},
+{n:3,van:1,mi:4.08,d:"E",name:"Bill Frith",desc:"Gradual downhill into Rhododendron along Forest Service Roads and HWY 26 on paved shoulder.",
+ exch:"Exchange 3 — 9 Rd & HWY 26, Rhododendron, OR 97049",lat:45.334985,lng:-121.918987,
+ note:"No stopping on left side of HWY 26 to water runners. Vans do not follow the course — continue on HWY 26.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 2 (Rd 35)"],["0.29","↑","Continue onto Rd 31"],["1.03","↑","STRAIGHT onto Rd 29"],["1.47","→","RIGHT on HWY 26"],["2.95","↑","Tollgate Campground"],["4.08","🏁","Exchange 3 (9 Rd & HWY 26)"]],
+ park:"Only next runner permitted in exchange zone.",prov:"Restaurants/Grocery",fuel:"No (nearest fuel in Welches — Leg 4)",elev:"7 / −738 ft  (net −731)"},
+{n:4,van:1,mi:6.64,d:"M",name:"Bruce Fleming",desc:"Gradual downhill from Rhododendron along HWY 26 on paved shoulder.",
+ exch:"Exchange 4 — Brightwood Weigh Station, near E Sleepy Hollow Dr/HWY 26, Sandy, OR 97055 (m.p. 36.5)",lat:45.3777,lng:-122.039235,
+ note:"No stopping on left side of HWY 26 to water runners.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 3 (9 Rd)"],["0.58","↑","BBQ Restaurant"],["1.25","↑","Zig Zag Ranger Station"],["2.55","↑","Koya Kitchen"],["3.89","↑","Mt. Air Motel"],["5.68","↑","Cross over Salmon River"],["6.64","🏁","Exchange 4 (Brightwood Weigh Station)"]],
+ park:"Brightwood Weigh Station, right side of HWY 26. Next runner only (space constraints).",prov:"No",fuel:"No",food:"Mt. Hood Lions Club fundraiser (Fri 5–10AM): breakfast burritos, OJ, coffee, energy drinks — 24730 E Woodsey Way, Welches",elev:"35 / −543 ft  (net −508)"},
+{n:5,van:1,mi:6.05,d:"VH",name:"Patrick Cross",desc:"Long leg over very challenging rolling hills along HWY 26 shoulder.",
+ exch:"Exchange 5 — SE Cherryville Dr / HWY 26, Sandy, OR 97055 (m.p. 30.6)",lat:45.366529,lng:-122.155008,
+ note:"No stopping on left of HWY 26 to water runners. Right lane of HWY 26 closed to other motorists for HTC vans only — proceed slowly along cone barrier. Vans turn RIGHT onto E Cherryville Dr before exchange, LEFT onto Baty Rd, RIGHT onto HWY 26. Team members must stay in van at Exch 5.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 4 (Brightwood)"],["0.29","↑","E Sleepy Hollow Dr / HWY 26"],["0.61","↑","Academy and Camps"],["3.11","↑","Ivy Bear"],["3.59","↑","E Sylvan Dr / HWY 26"],["3.85","→","RIGHT onto E Cherryville Dr"],["5.00","↑","Baty Rd / E Cherryville Dr"],["6.05","🏁","Exchange 5 (E Cherryville Dr/HWY 26)"]],
+ park:"Use right lane of HWY 26, park along shoulder. Only next runner in zone.",prov:"No",fuel:"No (nearest — Leg 6, Shorty's Corner)",elev:"421 / −203 ft  (net +218)"},
+{n:6,van:0,mi:7.10,d:"H",name:"Denise Cooper",major:"Country Financial Major Van Exchange",desc:"Challenging elevation gains and gradual downhills along HWY 26 on paved shoulder.",
+ exch:"Exchange 6 — Sandy High School, 37400 Bell St, Sandy, OR 97055",lat:45.405721,lng:-122.276866,
+ note:"MAJOR VAN EXCHANGE (Van 1 ↔ Van 2). Van 1 parking: south lot off Bluff Rd near tennis courts. Exit north via Bell St, RIGHT onto SE Jewelberry Ave. Van 2 → LEFT onto Kelso Rd (follow Leg 7). Van 1 → route to Exchange 12 near Tilikum Crossing (2201 SE Water Ave, Portland).",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 5 (Cherryville Dr/HWY 26)"],["1.70","↑","SE McCabe Rd"],["2.36","↑","SE Paha Loop Dr"],["3.58","↑","Shorty's Corner"],["4.08","↑","Calamity Jane's"],["6.35","→","RIGHT onto Bluff Rd / HWY 26"],["6.85","←","LEFT into Exchange 6"],["7.10","🏁","Exchange 6 (Sandy HS softball fields)"]],
+ park:"Van 1: south lot off Bluff Rd near tennis courts. Water stop at Hwy 26 & SE Veneer Ln.",prov:"Restaurants/Grocery nearby",fuel:"Multiple stations nearby",food:"HTC Merch, Knockaround, Shokz sold here",elev:"163 / −581 ft  (net −418)"},
+{n:7,van:2,mi:5.25,d:"M",name:"Scott Thompson",desc:"Rolling hills along HWY 26 on paved shoulder and farm/country roads.",
+ exch:"Exchange 7 — 36225 SE Proctor Rd, Boring, OR 97009",lat:45.453705,lng:-122.290537,
+ note:"Please do not mark turns on roads.",side:"Run on LEFT side of the road for this leg.",
+ dir:[["0.00","•","Exchange 6 (Sandy HS)"],["0.72","←","LEFT onto Jewelberry Ave"],["1.52","←","LEFT onto SE Kelso Rd"],["2.17","→","RIGHT onto SE 362nd Ave"],["3.64","↑","SE 352nd / Compton Rd intersection"],["3.88","→","RIGHT onto Hauglum Rd"],["4.38","←","LEFT onto SE 362nd"],["5.25","🏁","Exchange 7 (Bluff Rd/Proctor Rd/362nd)"]],
+ park:"Oregon Trail Primary Academy lot and adjacent lot.",prov:"No",fuel:"No (nearest — Sandy)",elev:"176 / −292 ft  (net −116)"},
+{n:8,van:2,mi:6.00,d:"M",name:"Jerry Duncan",desc:"Downhill and rolling terrain along country roads and limited paved shoulder.",
+ exch:"Exchange 8 — 27801 SE Dee St, Boring, OR 97009",lat:45.43217,lng:-122.375395,
+ side:"Run on LEFT until turning right on Compton Rd, then RIGHT for the remainder.",
+ dir:[["0.00","•","Exchange 7 (Proctor Rd)"],["0.54","←","LEFT onto 352nd"],["1.20","↑","352nd Ave / Calico Rd"],["1.70","→","RIGHT onto Brooks Rd"],["3.20","←","LEFT onto Revenue Rd"],["3.57","←","LEFT onto Orient Dr"],["3.72","→","RIGHT onto Compton Rd"],["4.25","↑","Compton Rd/312th (becomes HWY 212)"],["5.77","↑","HWY 212 / SE 282nd Ave"],["5.88","→","RIGHT onto Dee St (was Keller Rd)"],["6.00","🏁","Exchange 8 (Dee St/Springwater Trail)"]],
+ park:"Boring Middle School & Naas Elementary on Dee St (adjacent to HWY 212 & Springwater Trail).",prov:"Restaurants on HWY 212",fuel:"Yes, on HWY 212",elev:"140 / −346 ft  (net −206)"},
+{n:9,van:2,mi:5.38,d:"M",name:"Scott Anderson",desc:"Springwater Trail — nearly no van access for 5.38 mi.",
+ exch:"Exchange 9 — Main City Park, 219 S Main Ave, Gresham, OR 97030",lat:45.495413,lng:-122.431662,
+ danger:"Runner on Springwater Trail 5.38 mi with almost no van access. Water NOT provided — pack your own. HTC/Springwater Bike Patrol on trail after 7PM.",side:"Trail — follow signage.",
+ dir:[["0.00","•","Exchange 8 (Dee St)"],["0.67","↑","Cross over Haley Rd"],["0.97","↑","Cross bridge over Telford Rd"],["2.12","↑","Cross over Rugg Rd"],["4.02","↑","Cross over Hogan Rd"],["4.62","↑","Cross over Regner Rd"],["5.38","🏁","Exchange 9 (Main City Park/Springwater Trail)"]],
+ park:"At Main City Park. Water fountain at trailhead.",prov:"Restaurants/Grocery in downtown Gresham",fuel:"Yes, downtown Gresham",elev:"38 / −258 ft  (net −220)"},
+{n:10,van:2,mi:6.15,d:"M",name:"Kirk Helzer",desc:"Springwater Trail — limited van access.",
+ exch:"Exchange 10 — 5936 SE 111th Ave, Portland, OR 97266",lat:45.478160,lng:-122.548594,
+ danger:"Limited van access. Water NOT provided — pack your own. Bike Patrol on trail in evening.",side:"Trail — follow signage.",
+ dir:[["0.00","•","Exchange 9 (Main City Park)"],["0.31","↑","Cross over 7th St"],["0.85","↑","Cross bridge over Towle Ave/Eastman Pkwy"],["1.81","↑","Cross over Pleasant View Dr"],["2.70","↑","Cross over SE 174th Ave/Jenne Rd"],["4.74","↑","Cross over 136th Ave"],["5.16","↑","Cross over 128th Ave"],["5.50","↑","Cross over 122nd Ave"],["6.15","🏁","Exchange 10 (Springwater Trail nr Shaw's Automotive)"]],
+ park:"Follow signs near 111th Ave.",prov:"Restaurants on Foster Rd",fuel:"Yes, on Foster Rd",elev:"30 / −129 ft  (net −162)"},
+{n:11,van:2,mi:3.92,d:"E",name:"Pete Carleson",desc:"Springwater Trail through Portland.",
+ exch:"Exchange 11 — 4401 SE Johnson Creek Blvd, Portland, OR 97222",lat:45.461816,lng:-122.617121,
+ note:"HTC/Springwater Bike Patrol on trail in evening. Upper lot: Precision Castparts on SE Harney Dr. Lower lot: south of Springwater Trail/Johnson Creek Blvd.",side:"Trail — follow signage.",
+ dir:[["0.00","•","Exchange 10 (Shaw's Automotive)"],["0.37","↑","Cross over SE Foster Rd"],["1.79","↑","Cross over 82nd Ave"],["2.69","↑","Cross over Johnson Creek Blvd/Bell Ave"],["3.00","↑","Cross over Flavel Dr/Linwood Ave"],["3.92","🏁","Exchange 11 (Springwater Trail nr SE 45th Ave)"]],
+ park:"Upper: Precision Castparts (SE Harney Dr). Lower: south of trail/Johnson Creek Blvd.",prov:"Restaurants/Convenience Store",fuel:"No (nearest SE 82nd Ave nr Fred Meyer)",elev:"12 / −117 ft  (net −105)"},
+{n:12,van:0,mi:5.85,d:"M",name:"Jason Shaw",major:"First Tech Major Van Exchange",desc:"Mostly flat with a few rolling hills; trail and paved city streets.",
+ exch:"Exchange 12 — OMSI gravel lot at end of SE 2nd Place, Portland, OR 97214",lat:45.506717,lng:-122.664303,
+ note:"MAJOR VAN EXCHANGE. Bike Patrol on trail in evening. Van 1 arrives here from Exch 6. Parking: SE 2nd Ave/Tilikum Bridge, PCC Climb Center (1626 SE Water Ave), River East Center (1515 SE Water Ave), Oregon Rail Heritage Center (after 5PM, 2250 SE Water Ave).",side:"Trail then city streets.",
+ dir:[["0.00","•","Exchange 11 (SE 45th Ave)"],["1.47","→","RIGHT towards SE 19th Ave"],["1.51","←","LEFT onto SE Linn St"],["2.09","↗","Keep RIGHT onto Sellwood Gap"],["2.98","↗","Slight RIGHT to stay on Springwater"],["5.54","↑","Continue onto SE 4th Ave"],["5.70","←","LEFT onto SE Caruthers St"],["5.76","↑","Continue onto Eastbank Esplanade"],["5.85","🏁","Exchange 12 (OMSI gravel lot)"]],
+ park:"Multiple lots on SE Water Ave (see notes).",prov:"Wrap Around Town & Bondi Bowl food trucks",fuel:"—",food:"HTC/PTC Merch sold here",elev:"128 / −189 ft  (net −61)"},
+{n:13,van:1,mi:5.21,d:"E",name:"Gary Zimmerman",desc:"Slight incline over Tilikum Crossing, then flat along the Willamette River, Portland Waterfront and paved city street.",
+ exch:"Exchange 13 — 3838 NW Front Ave, Portland, OR 97210",lat:45.551924,lng:-122.715139,
+ note:"Vans do not follow course. Van parking: west side of exchange lot just before exchange zone.",side:"Waterfront/bridges — follow signage.",
+ dir:[["0.00","•","Exchange 12 (OMSI)"],["0.10","←","LEFT onto Tilikum Crossing walkway"],["0.14","→","RIGHT onto Tilikum Crossing"],["0.61","→","RIGHT onto SW Bond Ave"],["0.83","↗","Merge RIGHT onto Waterfront Park Trail"],["1.58","↑","Hawthorne Bridge"],["1.81","↑","Morrison Bridge"],["2.18","↑","Burnside Bridge"],["2.45","↑","Steel Bridge"],["2.52","↗","Merge onto SW Naito Pkwy"],["2.88","↑","Broadway Bridge"],["3.41","↑","Naito Pkwy → Front Ave (under Fremont Bridge)"],["4.62","↑","NW 26th Ave"],["5.21","🏁","Exchange 13 (Front Ave)"]],
+ park:"West side of exchange lot, just before zone.",prov:"—",fuel:"No (nearest 3 mi S on NW 23rd/Burnside)",elev:"110 / −118 ft  (net −8)"},
+{n:14,van:1,mi:7.91,d:"H",name:"Bruce Harman",desc:"Long leg on HWY 30 with sideruns and the St Johns & Wapato bridges.",
+ exch:"Exchange 14 — Gillihan Layover Terrace parking lot, Portland, OR 97231",lat:45.629822,lng:-122.815850,
+ note:"Park in zoned-off area east of underpass — NO parking in paved lots. Only next runner allowed in zone.",side:"Run/walk on RIGHT side of road.",
+ dir:[["0.00","•","Exchange 13 (Front Ave)"],["0.80","←","LEFT onto Kittridge Ave"],["1.03","→","RIGHT onto HWY 30"],["3.62","↑","St Johns Bridge"],["7.50","→","RIGHT onto Wapato Bridge"],["7.91","🏁","Exchange 14 (Gillihan Layover Terrace)"]],
+ park:"Zoned area east of underpass; no paved-lot parking.",prov:"No",fuel:"Fuel in Linnton",elev:"143 / −154 ft  (net −11)"},
+{n:15,van:1,mi:6.00,d:"H",name:"Joe Elmore",desc:"Gently rolling terrain on paved shoulder along HWY 30.",
+ exch:"Exchange 15 — Rocky Point Weigh Station, Scappoose, OR (m.p. 16.5)",lat:45.69497,lng:-122.871008,
+ danger:"VANS NOT ALLOWED TO STOP ON SHOULDER OF HWY 30. For safety a driver must stay in the vehicle at all times.",side:"Run/walk on RIGHT side of road.",
+ dir:[["0.00","•","Exchange 14 (Gillihan Terrace)"],["0.23","↑","Cross over Wapato Bridge"],["0.43","→","RIGHT onto NW St. Helens Rd / HWY 30"],["1.24","↑","NW Rafton Rd"],["3.82","↑","NW Logie Trail Rd"],["5.07","↑","Wildwood Golf Course"],["6.02","🏁","Exchange 15 (Rocky Point Weigh Station)"]],
+ park:"Right of HWY 30: parallel on left, nose-in angle on right. Follow volunteers.",prov:"No",fuel:"No (nearest — Linnton, Leg 14)",elev:"208 / −183 ft  (net +25)"},
+{n:16,van:1,mi:4.00,d:"E",name:"Julie Hilsenteger",desc:"Gently rolling terrain on paved shoulder along HWY 30.",
+ exch:"Exchange 16 — Scappoose High School, 33700 SE High School Way, Scappoose, OR 97056",lat:45.749198,lng:-122.874359,
+ danger:"VANS NOT ALLOWED TO STOP ON SHOULDER OF HWY 30.",side:"Run/walk on RIGHT side of road.",
+ dir:[["0.00","•","Exchange 15 (Rocky Point)"],["0.84","↑","Rocky Point Rd"],["2.51","↑","Bonneville Dr / Johns Landing Rd"],["3.83","→","RIGHT onto SE High School Way"],["4.00","🏁","Exchange 16 (Scappoose High School)"]],
+ park:"Scappoose HS parking lot on right.",prov:"Restaurants",fuel:"Yes",food:"Scappoose HS fundraiser (Fri 11AM–Sat 1AM): bagels, coffee, $2 showers",elev:"91 / −109 ft  (net −18)"},
+{n:17,van:1,mi:5.32,d:"M",name:"Jason Humble",desc:"Along HWY 30 with a flagged crossing. Fuel up — no gas on the race route until Astoria.",
+ exch:"Exchange 17 — Warren Baptist Church, 56799 Columbia River Hwy, Warren, OR 97053",lat:45.819164,lng:-122.850781,
+ note:"FUEL UP HERE — recommended, as there are no gas stations on the race route until Astoria. St. Helens has fuel/food.",side:"Run on right; cross HWY 30 with flaggers only.",
+ dir:[["0.00","•","Exchange 16 (Scappoose HS)"],["0.10","↑","High School Way"],["0.12","→","RIGHT onto HWY 30 (cross w/ flaggers only)"],["1.70","↑","Continue past Gilmore Rd"],["3.10","↑","Continue past Slavens Rd"],["4.30","↑","Continue past Fuller Rd"],["5.23","←","LEFT onto Church Rd"],["5.32","🏁","Exchange 17 (Warren Baptist Church)"]],
+ park:"Follow signage on Church Rd.",prov:"Yes, in St. Helens",fuel:"Yes — FUEL UP!",elev:"82 / −87 ft  (net −5)"},
+{n:18,van:0,mi:4.15,d:"H",name:"John Gordon",major:"Major Van Exchange · First Aid",desc:"Flat and gradual uphill on HWY 30 and paved backcountry roads.",
+ exch:"Exchange 18 — Columbia County Fairgrounds, 58892 Saulser Rd, St. Helens, OR 97051",lat:45.85055,lng:-122.872306,
+ note:"MAJOR VAN EXCHANGE. Only on-course FIRST AID station. Tents allowed; sleep only in roped-off areas (DQ if sleeping by vehicle). Van 2 takes a SEPARATE route (see Course tab). Last fuel was St. Helens. Keep noise down 10PM–7AM.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 17 (Warren Baptist)"],["1.30","→","RIGHT onto Hazen Rd"],["2.40","→","Continue onto Bennett Rd"],["2.80","←","LEFT onto S Bachelor Flat Rd"],["3.80","←","LEFT onto Saulser Rd"],["4.15","🏁","Exchange 18 (Columbia County Fairgrounds)"]],
+ park:"At Columbia County Fairgrounds. Tents OK; designated sleeping only.",prov:"Fairgrounds food fundraiser; The Watering Hole beverages; Providence First Aid",fuel:"Last stop was St. Helens",elev:"335 / −112 ft  (net −223)"},
+{n:19,van:2,mi:5.89,d:"VH",name:"Jeff Boly",desc:"Long leg over challenging up-and-down hills on paved backcountry roads.",
+ exch:"Exchange 19 — 30732 Pittsburgh Rd, St. Helens, OR 97051",lat:45.901569,lng:-122.93397,
+ danger:"Cell coverage UNRELIABLE until after Leg 32. Only Van 2 (colored sign) allowed Exch 18–23. NO STOPPING within 1 mile of exchange — 5-min penalty.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 18 (Fairgrounds)"],["0.37","←","LEFT onto Sykes Rd"],["1.14","→","RIGHT onto Kappler Rd"],["1.88","→","RIGHT onto Brinn Rd"],["1.90","←","LEFT onto Pittsburgh Rd"],["2.78","↑","Continue past Gensman Rd"],["5.89","🏁","Exchange 19 (Pittsburgh Rd)"]],
+ park:"No vans on right side near exchange or blocking driveways.",prov:"Course fundraiser (Fri 12PM–close): hot meals, sandwiches, snacks",fuel:"No",elev:"446 / −305 ft  (net +141)"},
+{n:20,van:2,mi:5.58,d:"VH",name:"Larry Merrifield",desc:"Very challenging up/downhills on partially paved and gravel backcountry roads.",
+ exch:"Exchange 20 — Pittsburgh Rd near Janshaw Rd (9.75 mi mark), St. Helens, OR 97051",lat:45.890793,lng:-122.997456,
+ danger:"Cell coverage unreliable. GRAVEL — bring a bandana/scarf for dust. Only Van 2 (colored sign) on this leg.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 19 (Pittsburgh Rd)"],["3.03","↑","Gravel section begins"],["3.90","↑","Large barn on right"],["5.58","🏁","Exchange 20 (Pittsburgh Rd)"]],
+ park:"On Willark Rd to the left of exchange. Only 20/21 runners exit here.",prov:"Columbia Co. Mental Health fundraiser: hot dogs, sandwiches, coffee",fuel:"No",elev:"912 / −322 ft  (net +590)"},
+{n:21,van:2,mi:5.06,d:"M",name:"Steve Strauss",desc:"Flat, slightly downhill near a creek on gravel backcountry roads.",
+ exch:"Exchange 21 — Schaffer Rd (near Camp Emerald Forest)",lat:45.945578,lng:-123.043629,
+ danger:"Cell coverage unreliable. GRAVEL/dust — bring a bandana. Only Van 2 (colored sign) on this leg.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 20 (Pittsburgh Rd)"],["0.30","→","RIGHT onto Schaffer Rd (Camp Emerald Forest sign — far right fork)"],["2.00","↑","Blue gate on left"],["5.06","🏁","Exchange 21 (Schaffer Rd)"]],
+ park:"Park to the right; leave the left of the road open. Don't block Camp Emerald Forest drive.",prov:"No",fuel:"No",elev:"34 / −249 ft  (net −215)"},
+{n:22,van:2,mi:6.82,d:"H",name:"Justin Humble",desc:"Gradual up/downhills on paved but narrow backcountry roads.",
+ exch:"Exchange 22 — Apiary Rd at ODOT gravel stockpile (6.70 mi mark), Vernonia, OR",lat:45.949276,lng:-123.149365,
+ danger:"Cell coverage unreliable. Uneven terrain at exchange — watch your footing.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 21 (Schaffer Rd)"],["0.03","←","LEFT onto Apiary Rd"],["1.67","↑","Wilkerson County Park"],["3.77","↑","Rock Quarry"],["4.57","↑","Golden-yellow gate on left"],["6.57","↑","Small blue house & garage on left"],["6.82","🏁","Exchange 22 (Apiary Rd)"]],
+ park:"Uneven terrain — watch footing.",prov:"No",fuel:"No (nearest 10 mi S on HWY 47: Bridge St Mini Mart, Vernonia)",elev:"436 / −618 ft  (net −182)"},
+{n:23,van:2,mi:4.16,d:"E",name:"Lora Mattsen",desc:"Country roads to Natal Grange.",
+ exch:"Exchange 23 — Natal Grange, 67528 Nehalem Hwy N, Vernonia, OR 97064",lat:45.974329,lng:-123.198666,
+ danger:"Cell coverage unreliable. Only Van 2 (colored sign). Keep noise down 10PM–7AM; stay off private property.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 22 (Apiary Rd)"],["0.76","→","RIGHT onto HWY 47 (Nehalem Hwy)"],["0.99","↑","Peterson Fire Station on left"],["4.16","🏁","Exchange 23 (Natal Grange)"]],
+ park:"Follow volunteer instructions; don't drop runners near exchange.",prov:"Natal Grange fundraiser (Fri 2PM–close): breakfast, hot meals, coffee. Bottled water for sale.",fuel:"No (nearest 12.4 mi S: Bridge St Mini Mart)",elev:"142 / −255 ft  (net −113)"},
+{n:24,van:0,mi:4.83,d:"E",name:"David Novak",major:"Major Van Exchange · Alaska Campout",desc:"Flat along the Nehalem River, pastoral, on HWY 47 & HWY 202.",
+ exch:"Exchange 24 — 13950 HWY 202, Birkenfeld, OR 97016 (m.p. 44.9)",lat:46.002792,lng:-123.278399,
+ note:"MAJOR VAN EXCHANGE. Cell coverage unreliable. Alaska Carelines campout — set-up tents, first come first serve (give your Alaska Mileage Plan #). Tents allowed; sleep only in roped-off areas (DQ otherwise). Outside the van at night, use a light/flashers.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 23 (Natal Grange)"],["0.83","↑","Peterson House Museum on left"],["1.15","↑","Battle Creek Bridge"],["3.60","↑","Bright Blue Building"],["3.66","↑","Continue on HWY 202"],["4.83","🏁","Exchange 24 (Mist — HWY 202)"]],
+ park:"Two large fields on right side of road. Use flashers when exiting.",prov:"Course fundraiser + first aid; Barn field food: burgers, chili, biscuits & gravy",fuel:"No (nearest 13.2 mi N on HWY 30)",elev:"93 / −94 ft  (net −1)"},
+{n:25,van:1,mi:3.80,d:"E",name:"Rob Rickard",desc:"Gently rolling terrain (last 2 mi) on paved country roads.",
+ exch:"Exchange 25 — 11249 HWY 202, Birkenfeld, OR 97016 (m.p. 41.29)",lat:45.995729,lng:-123.334103,
+ danger:"Cell coverage unreliable until after Leg 32.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 24 (Mist — HWY 202)"],["1.19","↑","Nehalem River Bridge"],["1.76","↑","Mist/Birkenfeld Fire Station"],["3.10","↑","Fishhawk Rd"],["3.80","🏁","Exchange 25 (Birkenfeld Community Church)"]],
+ park:"Exchange on left; during congestion, VAN 1 ONLY.",prov:"No",fuel:"No (nearest 17 mi N on HWY 30)",elev:"105 / −51 ft  (net +54)"},
+{n:26,van:1,mi:5.65,d:"H",name:"Dave Toll",desc:"Rolling on paved roads with a half-mile downhill. Watch for Nehalem Bridge construction (one-lane, flaggers).",
+ exch:"Exchange 26 — 5.65 mi on HWY 202, Clatskanie, OR 97016",lat:45.97556,lng:-123.416774,
+ note:"Cell coverage unreliable. Nehalem Bridge construction — one-lane traffic, follow flaggers, expect delays. Turn on hazards when leaving exchange. Right turn only on exit.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 25 (Birkenfeld)"],["0.48","↑","Nehalem River Bridge"],["1.98","↑","Welcome to Clatsop City sign"],["2.48","↑","Nehalem River Bridge"],["2.58","↑","Jones Rd"],["3.57","↑","Cahill Rd"],["5.65","🏁","Exchange 26 (HWY 202)"]],
+ park:"Entrance before exchange; during congestion VAN 1 ONLY. No shoulder parking.",prov:"No",fuel:"No",elev:"320 / −381 ft  (net −61)"},
+{n:27,van:1,mi:6.36,d:"M",name:"Greg Lorts",desc:"Rolling hills on paved rural country road.",
+ exch:"Exchange 27 — near 79156 HWY 202, Jewell, OR 97138",lat:45.933928,lng:-123.5061,
+ note:"Cell coverage unreliable. Turn on hazards when leaving exchange. Showers & sleeping area available (Jewell School).",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 26 (HWY 202)"],["0.60","↑","Northrup Creek Rd"],["3.40","↑","Nehalem River Bridge"],["5.11","↑","Rhodes Rd"],["5.46","↑","Wage Rd"],["6.30","↑","HWY 103"],["6.36","🏁","Exchange 27 (Jewell — HWY 202)"]],
+ park:"Entrance for van parking is before the exchange.",prov:"Jewell School fundraiser: scratch-made food, showers, restrooms, quiet sleeping",fuel:"No",elev:"250 / −276 ft  (net −26)"},
+{n:28,van:1,mi:3.83,d:"E",name:"Dave Luman",desc:"Gradual uphill on paved road; narrow HWY with limited shoulder. Passes the Elk Preserve.",
+ exch:"Exchange 28 — near Lee Wooden County Park, Jewell, OR (m.p. 25.3)",lat:45.954195,lng:-123.573884,
+ danger:"Cell coverage unreliable. NO stopping/bathrooms/sleeping at Elk Viewpoint. NO STOPPING on highway to pick up/drop off — immediate DQ.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 27 (Jewell — HWY 202)"],["0.82","↑","County Maintenance Yard on left"],["2.35","↑","Elk Viewpoint on left"],["3.83","🏁","Exchange 28 (HWY 202 m.p. 25.3)"]],
+ park:"During congestion, VAN 1 ONLY.",prov:"No",fuel:"No",elev:"236 / −67 ft  (net +169)"},
+{n:29,van:1,mi:5.97,d:"VH",name:"Shirley Shaw",desc:"Very challenging up/downhills through a winding wooded section of HWY 202.",
+ exch:"Exchange 29 — HWY 202 m.p. 19.4, Astoria, OR 97103",lat:46.020736,lng:-123.625101,
+ danger:"HIGH CONGESTION exchange — be prepared. No cell service — walkie-talkies recommended. Ensure your van fueled in St. Helens. Drop next runner near lot entrance, NOT at exchange.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 28 (m.p. 25.3)"],["0.33","↑","Lee Wooden Park on left (m.p. 24.9)"],["3.47","↑","Crest of hill (m.p. 21.8)"],["5.97","🏁","Exchange 29 (HWY 202 m.p. 19.4)"]],
+ park:"½ mile from exchange. Drop next runner while waiting near lot entrance. Wait in lot until your runner reaches pickup area.",prov:"No",fuel:"No",elev:"602 / −502 ft  (net +100)"},
+{n:30,van:0,mi:5.31,d:"M",name:"Randy Teadtke",major:"Major Van Exchange",desc:"Gradual uphill and steep downhill on a winding narrow back road with minimal shoulder.",
+ exch:"Exchange 30 — 87232 HWY 202, Astoria, OR 97103",lat:46.065768,lng:-123.692707,
+ note:"MAJOR VAN EXCHANGE. Cell coverage unreliable. Sleeping fields available (NO tents at Exch 30). Van 1 can take the faster route to the Finish from here (see Course tab).",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 29 (m.p. 19.4)"],["2.37","↑","m.p. 17 sign"],["3.53","↑","Nehalem River Bridge (m.p. 15.8)"],["5.31","🏁","Exchange 30 (Astoria — HWY 202)"]],
+ park:"Both sides of highway near exchange — follow volunteers. Sleeping fields, no tents.",prov:"Local family fundraiser (CASH ONLY, Fri 10PM–close): meals & snacks",fuel:"No (nearest 13 mi into Astoria)",elev:"230 / −731 ft  (net −501)"},
+{n:31,van:2,mi:3.96,d:"M",name:"Ted Bachman",desc:"Gradual hills on a narrow paved back-country road.",
+ exch:"Exchange 31 — 89386 HWY 202, Astoria, OR 97103 (Coastline Christian Fellowship / Olney Grange)",lat:46.097719,lng:-123.749397,
+ note:"Cell coverage unreliable until after Leg 32. Fuel available at Olney Store (Hwy 202 / Youngs River Rd, 9.5 mi marker). Van 2 breaks off here from Van 1's finish route.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 30 (Astoria — HWY 202)"],["0.85","↑","m.p. 13 sign"],["1.56","↑","McCoy Lane"],["2.06","↑","Klaskanine River Bridge & Fish Hatchery (m.p. 12)"],["2.67","↑","Lillenas Rd (m.p. 11.3)"],["3.13","↑","Olney Lane"],["3.96","🏁","Exchange 31 (Coastline Christian Fellowship)"]],
+ park:"Olney Grange lot (left) & church lot (right).",prov:"Astoria HS Basketball fundraiser (Fri 6PM–close): breakfast, burgers, dogs, BLTs. Bottled water for sale.",fuel:"Yes at Olney Store (Hwy 202/Youngs River Rd)",elev:"152 / −296 ft  (net −144)"},
+{n:32,van:2,mi:4.20,d:"M",name:"Mark Rogers",desc:"Youngs River Rd toward Youngs River Falls.",
+ exch:"Exchange 32 — 3.86 mi on Youngs River Rd (from HWY 202), Olney, OR 97103",lat:46.069758,lng:-123.787865,
+ note:"Cell coverage unreliable. Parking VERY LIMITED — no shoulder parking, expect heavy traffic. From here Van 1 turns onto HWY 202 to Seaside; only Van 2 stays on course.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 31 (Coastline Christian)"],["0.34","←","LEFT onto Youngs River Rd"],["1.04","→","Bridge (Y in road) — keep RIGHT on Youngs River Rd"],["1.07","↑","Saddle Mountain Rd"],["1.61","↑","Red barn"],["2.58","↑","Jurgensen Rd"],["4.20","🏁","Exchange 32 (Youngs River Falls)"]],
+ park:"VERY LIMITED — follow volunteers, no shoulder parking.",prov:"No",fuel:"No (nearest 11 mi N in Astoria)",elev:"191 / −261 ft  (net −70)"},
+{n:33,van:2,mi:7.72,d:"H",name:"Walt Gamble",desc:"Rolling hills on narrow country roads.",
+ exch:"Exchange 33 — 92179 Lewis & Clark Rd, Astoria, OR 97103",lat:46.147492,lng:-123.846048,
+ note:"Only Van 2 (colored sign). Water station at 3.67 mi.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 32 (Youngs River Falls)"],["3.67","↑","Tucker Creek Rd (water station)"],["5.12","↑","Binder Slough Rd"],["6.18","↑","Dow Rd"],["6.60","↑","Wireless Rd"],["7.29","←","LEFT onto Lewis & Clark Rd"],["7.72","🏁","Exchange 33 (Lewis & Clark School)"]],
+ park:"At Lewis & Clark School — limited, minimize parking time.",prov:"Astoria Youth Baseball fundraiser (Sat 4AM–close): burritos, biscuits & gravy, burgers. Bottled water for sale.",fuel:"No",elev:"243 / −249 ft  (net −6)"},
+{n:34,van:2,mi:4.12,d:"E",name:"Ken Travis",desc:"Very short leg with gently rolling hills along paved country roads.",
+ exch:"Exchange 34 — 90886 Fort Clatsop Rd, Astoria, OR 97103",lat:46.104487,lng:-123.866126,
+ note:"Only Van 2 (colored sign).",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 33 (Lewis & Clark School)"],["0.61","↑","Lynstad Heights"],["1.82","↑","Mudd Ln"],["2.43","↑","Kee Ln / Reith Ln"],["2.66","↑","Lewis & Clark Cemetery"],["3.32","→","RIGHT onto Lewis & Clark Rd"],["3.43","→","RIGHT onto Fort Clatsop Rd"],["4.08","←","LEFT onto Lewis & Clark Mainline"],["4.12","🏁","Exchange 34 (Lewis & Clark Mainline)"]],
+ park:"Log-scale station near Fort Clatsop Rd / Lewis & Clark Mainline.",prov:"No",fuel:"No",elev:"173 / −140 ft  (net +33)"},
+{n:35,van:2,mi:7.07,d:"H",name:"Lopez Lomong",desc:"Gently rolling terrain on a combination of paved and gravel roads.",
+ exch:"Exchange 35 — 86645 Lewis & Clark Rd, Astoria, OR 97103",lat:46.007615,lng:-123.867294,
+ note:"Only Van 2 (colored sign). Do NOT litter or drop water bottles on the Lewis & Clark Mainline Trail.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 34 (Lewis & Clark Mainline)"],["0.92","↑","Lewis & Clark Rd"],["1.92","←","LEFT onto Lewis & Clark Rd"],["6.43","↑","Lewis & Clark Mainline"],["7.07","🏁","Exchange 35 (Lewis & Clark Mainline)"]],
+ park:"Down private road (Lewis & Clark Mainline). NO shoulder parking.",prov:"No",fuel:"No",elev:"299 / −87 ft  (net +212)"},
+{n:36,van:2,mi:5.03,d:"M",name:"Larry Dutko",desc:"First ¾ mi on trail; challenging up and steep downhills on winding paved roads to finish on the sand near Broadway turnaround.",
+ exch:"FINISH — 30 North Promenade, Seaside, OR 97138",lat:45.993835,lng:-123.930111,
+ danger:"The Leg 36 runner MUST wear the bib with the timing chip! Crossing against the 12th Ave crosswalk signal may result in a DQ. Open containers on the promenade are illegal.",side:"Run on right side of road.",
+ dir:[["0.00","•","Exchange 35 (Lewis & Clark Mainline)"],["0.79","←","LEFT onto Lewis & Clark Rd"],["2.75","↑","“The Retreat” condos"],["3.12","←","LEFT onto Wahanna Rd"],["3.73","→","RIGHT onto 12th Ave"],["3.97","↑","Cross at crosswalk light, continue STRAIGHT on 12th Ave"],["4.47","←","LEFT onto Promenade"],["5.03","🏁","FINISH on the sand at the turnaround!"]],
+ park:"Park at Seaside High School; meet your runner one block N of the turnaround where Oceanway Ave meets the beach. See Course tab for the Van 1 finish route.",prov:"Food & beverage on the beach + Seaside restaurants; Sunset Rec Center (parking, showers, pool)",fuel:"Yes",elev:"123 / −414 ft  (net −291)"}
+];
+
+/* Rotation table by team size */
+const ROTATION = {
+  12:[[1,1],[2,2],[3,3],[4,4],[5,5],[6,6],[7,7],[8,8],[9,9],[10,10],[11,11],[12,12],[13,1],[14,2],[15,3],[16,4],[17,5],[18,6]],
+  10:[[1,1],[2,2],[3,3],[4,4],[5,5],[6,6],[7,7],[8,8],[9,9],[10,10],[11,1],[12,2],[13,3],[14,4],[15,5],[16,6],[17,7],[18,8]],
+  8:[[1,1],[2,2],[3,3],[4,4],[5,5],[6,6],[7,7],[8,8],[9,1],[10,2],[11,3],[12,4],[13,5],[14,6],[15,7],[16,8],[17,1],[18,2]]
+};
+
+/* Difficulty table rows: [van, runner, [leg,mi,rate]x3, totalMiles] */
+const DIFF = [
+ [1,1,[1,6.26,"VH"],[13,5.21,"E"],[25,3.80,"E"],15.27],
+ [1,2,[2,6.05,"H"],[14,7.91,"H"],[26,5.65,"H"],19.61],
+ [1,3,[3,4.08,"E"],[15,6.00,"H"],[27,6.36,"M"],16.44],
+ [1,4,[4,6.64,"M"],[16,4.00,"E"],[28,3.83,"E"],14.47],
+ [1,5,[5,6.05,"VH"],[17,5.32,"M"],[29,5.97,"VH"],17.34],
+ [1,6,[6,7.10,"H"],[18,4.15,"H"],[30,5.31,"M"],16.56],
+ [2,7,[7,5.25,"M"],[19,5.89,"VH"],[31,3.96,"M"],15.10],
+ [2,8,[8,6.00,"M"],[20,5.58,"VH"],[32,4.20,"M"],15.78],
+ [2,9,[9,5.38,"M"],[21,5.06,"M"],[33,7.72,"H"],18.16],
+ [2,10,[10,6.15,"M"],[22,6.82,"H"],[34,4.12,"E"],17.09],
+ [2,11,[11,3.92,"E"],[23,4.16,"E"],[35,7.07,"H"],15.15],
+ [2,12,[12,5.85,"M"],[24,4.83,"E"],[36,5.03,"M"],15.71]
+];
+
+/* Checklists */
+const PACKING = {
+ "Clothing":["3 sets of running clothes (bag each in a labeled Ziploc)","Running shoes + spare shoes/sandals","Warm-ups","Swimsuit/trunks","Spare shoe laces","Running gloves","Bandana (dusty gravel legs 20 & 21)","Sunglasses / contacts + solution","Running GPS / watch"],
+ "Equipment":["Large full water jugs (refill bottles)","Reusable water bottles","Bags to sort recycling vs landfill","Ziploc bags for wet clothes","Scotch/masking tape (van window signs)"],
+ "Toiletries":["Towel, washcloth, shampoo","Toothbrush / toothpaste","Antiperspirant","Sunscreen","Bug spray","Hand sanitizer / wipes"],
+ "Accessories":["Earplugs","First aid (blister/band-aids, Icy Hot, aspirin, antacids)","Instant ice packs, Ace bandages","Cell phone + charger / portable charger","Sleeping bag / small pillow","Food / snacks","Cash / credit card / photo ID","Safety pins","AirTags (track teammates w/o cell coverage)"]
+};
+const GEAR = ["Two (2) reflective vests","Two (2) LED flashers","Two flashlights / headlamps / lighted hats","First aid kit in your van (recommended)"];
+
+/* ============================ APP ============================ */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const views={legs:$("#view-legs"),detail:$("#view-detail"),clock:$("#view-clock"),course:$("#view-course"),rules:$("#view-rules"),safety:$("#view-safety"),prep:$("#view-prep")};
+const titles={legs:"Driver Guide",clock:"Race Clock",course:"Course",rules:"Race Rules",safety:"Safety",prep:"Prep & Checklists"};
+let curTab="legs", curVan="all", curSearch="";
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function setTab(t){
+  curTab=t;
+  Object.entries(views).forEach(([k,v])=>v.classList.toggle("hidden",k!==t && !(t==="legs"&&k==="detail"&&!views.detail.classList.contains("hidden"))));
+  // simple: hide all, show target
+  Object.values(views).forEach(v=>v.classList.add("hidden"));
+  if(t==="legs"){views.legs.classList.remove("hidden")}else{views[t].classList.remove("hidden")}
+  $$("#tabbar button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
+  $("#h-title-txt").textContent=titles[t];
+  window.scrollTo(0,0);
+}
+
+/* ---- Legs list ---- */
+function renderLegs(){
+  const q=curSearch.trim().toLowerCase();
+  const list=$("#legList"); list.innerHTML="";
+  const items=LEGS.filter(l=>{
+    if(curVan!=="all" && l.van!==0 && String(l.van)!==curVan) return false;
+    if(curVan!=="all" && l.van===0){ /* major exchanges shown in both */ }
+    if(!q) return true;
+    const hay=(l.n+" "+l.name+" "+l.desc+" "+l.exch+" "+l.dir.map(d=>d[2]).join(" ")).toLowerCase();
+    return hay.includes(q);
+  });
+  if(!items.length){list.innerHTML='<div class="card"><p class="muted">No legs match "'+esc(curSearch)+'".</p></div>';return}
+  items.forEach(l=>{
+    const vanTxt=l.van===0?"1&2":l.van;
+    const el=document.createElement("div");el.className="leg-item";
+    el.innerHTML=`<div class="leg-num">${l.n}<span class="van ${l.van===2?'v2':''}">V${vanTxt}</span></div>
+      <div class="leg-body">
+        <div class="leg-title">Leg ${l.n} <span class="pill ${l.d}">${l.d}</span></div>
+        <div class="leg-meta">${l.mi} mi · ${esc(l.exch.split("—")[0].trim())}${l.major?' · ⭐ '+esc(l.major.split('·')[0].trim()):''}</div>
+      </div><div class="chev">›</div>`;
+    el.onclick=()=>openLeg(l.n);
+    list.appendChild(el);
+  });
+}
+
+function openLeg(n){
+  const l=LEGS.find(x=>x.n===n);
+  const vanTxt=l.van===0?"Van 1 & 2":"Van "+l.van;
+  const mapsUrl=`https://maps.apple.com/?ll=${l.lat},${l.lng}&q=${encodeURIComponent("Exch "+(n===36?"Finish":n))}`;
+  const alerts=(l.danger?`<div class="note-box danger"><b>⚠ Caution</b><br>${esc(l.danger)}</div>`:"")
+    +(l.note?`<div class="note-box"><b>Note</b><br>${esc(l.note)}</div>`:"");
+  const dirRows=l.dir.map(d=>{
+    const fin=d[1]==="🏁", st=d[1]==="•";
+    return `<div class="dir ${fin?'fin':''} ${st?'start':''}"><div class="mi">${d[0]}</div><div class="ar">${d[1]}</div><div class="tx">${esc(d[2])}</div></div>`;
+  }).join("");
+  const kv=(k,v)=>v?`<div class="kv"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`:"";
+  $("#detailBody").innerHTML=`
+    <div class="detail-head">
+      <div class="top">
+        <div><h2>Leg ${l.n}${n===36?" · Finish":""}</h2><div class="ded">${vanTxt} · In memory/honor of ${esc(l.name)}</div></div>
+        <span class="pill ${l.d}" style="font-size:12px">${({E:"Easy",M:"Moderate",H:"Hard",VH:"Very Hard"})[l.d]}</span>
+      </div>
+      ${l.major?`<div style="margin-top:8px"><span class="tag" style="background:rgba(255,159,67,.18);color:#ffc98a">⭐ ${esc(l.major)}</span></div>`:""}
+      <div class="stats">
+        <div class="stat"><div class="v">${l.mi}</div><div class="l">Miles</div></div>
+        <div class="stat"><div class="v">${l.elev.split("(")[1]?.replace(")","").replace("net ","")||"—"}</div><div class="l">Net Elev</div></div>
+        <div class="stat"><div class="v">${l.dir.length-1}</div><div class="l">Cues</div></div>
+      </div>
+    </div>
+    <a class="gps-btn" href="${mapsUrl}">📍 Open Exchange in Apple Maps</a>
+    <div class="addr" style="margin:-4px 4px 12px">${esc(l.exch)}<br>GPS ${l.lat}, ${l.lng}</div>
+    ${alerts}
+    <div class="card">
+      <h3>Turn-by-turn <span class="progress">${esc(l.side||"")}</span></h3>
+      ${dirRows}
+    </div>
+    <div class="card">
+      <h3>At the exchange</h3>
+      ${kv("Parking",l.park)}${kv("Provisions",l.prov)}${kv("Fuel",l.fuel)}${kv("Food",l.food)}${kv("Elevation",l.elev)}
+      <div class="kv"><div class="k">Description</div><div class="v">${esc(l.desc)}</div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      ${n>1?`<button class="reset" style="flex:1;margin:0" onclick="openLeg(${n-1})">‹ Leg ${n-1}</button>`:""}
+      ${n<36?`<button class="reset" style="flex:1;margin:0" onclick="openLeg(${n+1})">Leg ${n+1} ›</button>`:""}
+    </div>`;
+  views.legs.classList.add("hidden");
+  views.detail.classList.remove("hidden");
+  $("#h-title-txt").textContent="Leg "+n;
+  window.scrollTo(0,0);
+}
+$("#detailBack").onclick=()=>{views.detail.classList.add("hidden");views.legs.classList.remove("hidden");$("#h-title-txt").textContent=titles.legs;};
+
+/* ---- Course ---- */
+function renderCourse(){
+  const rateCell=r=>`<span class="dot ${r[2]}"></span>${r[0]}<br><span class="muted small">${r[1]}·${r[2]}</span>`;
+  const rows=DIFF.map(row=>`<tr><td>${row[0]}</td><td class="name">R${row[1]}</td>
+     <td>${rateCell(row[2])}</td><td>${rateCell(row[3])}</td><td>${rateCell(row[4])}</td>
+     <td><b>${row[5].toFixed(2)}</b></td></tr>`).join("");
+  views.course.innerHTML=`
+   <div class="card">
+     <h3>Course overview</h3>
+     <p>197 miles from <b>Timberline Lodge</b> (Mt. Hood) to the <b>First Tech Finish</b> on the beach in Seaside. 36 legs split between two vans, meeting at 5 major van exchanges.</p>
+     <div><span class="tag">🚐 Van 1 · Legs 1–6, 13–18, 25–30</span><span class="tag">🚐 Van 2 · Legs 7–12, 19–24, 31–36</span></div>
+     <div><span class="tag"><span class="dot E"></span>Easy</span><span class="tag"><span class="dot M"></span>Moderate</span><span class="tag"><span class="dot H"></span>Hard</span><span class="tag"><span class="dot VH"></span>Very Hard</span></div>
+   </div>
+   <h2 class="sec">Major van exchanges</h2>
+   <div class="card"><p>Vans 1 & 2 only swap runners at these: <b>Exch 6</b> (Sandy HS), <b>12</b> (OMSI), <b>18</b> (Fairgrounds), <b>24</b> (Mist), <b>30</b> (Astoria). Teams under 12 runners: the active van always carries 6 (one running, five in the van).</p></div>
+   <h2 class="sec">Runner assignments & difficulty</h2>
+   <div class="tbl-wrap"><table>
+     <thead><tr><th>Van</th><th>Runner</th><th>1st leg</th><th>2nd leg</th><th>3rd leg</th><th>Total mi</th></tr></thead>
+     <tbody>${rows}</tbody></table></div>
+   <h2 class="sec">One-van-only sections</h2>
+   <div class="card">
+     <p>Some narrow stretches allow <b>only Van 2</b> (with the colored "race vehicle" sign); the other van takes an alternate route:</p>
+     <ul>
+       <li><b>Exch 18 → 23</b> (Fairgrounds to Vernonia). Van 1 route to Exch 24: out Saulser Rd → Sykes Rd → Cater Rd → Scappoose-Vernonia Hwy → HWY 47 → HWY 202 (≈32 mi).</li>
+       <li><b>Exch 31 → Seaside</b> (Leg 36). Van 1 skips ahead to the Finish.</li>
+     </ul>
+   </div>
+   <h2 class="sec">Van 1 shortcut · Exch 12 → 18</h2>
+   <div class="card"><p>Van 2 from OMSI (Exch 12): LEFT on SE Water Ave → SE Clay St → SE Grand Ave → Morrison Bridge → I-5 N → exit 302B US-30 W → US-30 to St. Helens → Millard Rd → S Bachelor Flat Rd → Saulser Rd → Columbia Co. Fairgrounds.</p></div>
+   <h2 class="sec">Van 1 route to Finish · Exch 30 → Seaside</h2>
+   <div class="card"><p><b>≈45–50 min, much faster than the race course.</b> From Exch 30: continue N on HWY 202 → at Exch 31 keep going (Van 2 breaks off) → at the traffic circle (13.55 mi) take the 2nd exit onto <b>HWY 101 S</b> toward Warrenton/Seaside → 25 mi to Seaside. Park at Seaside High School; meet your anchor one block N of the turnaround where Oceanway Ave meets the beach.</p></div>
+   <h2 class="sec">Exchange food & fundraisers</h2>
+   <div class="card">
+     <ul>
+       <li><b>Exch 4</b> — Mt. Hood Lions Club: breakfast burritos, coffee</li>
+       <li><b>Exch 6</b> — HTC Merch, Shokz, kettle corn; cooling station</li>
+       <li><b>Exch 12</b> — Wrap Around Town & Bondi Bowl food trucks; Brew Doctor, Honey Mama's samples</li>
+       <li><b>Exch 16</b> — Scappoose HS: bagels, coffee, $2 showers</li>
+       <li><b>Exch 18</b> — Fairgrounds meals; The Watering Hole; <b>only on-course First Aid</b></li>
+       <li><b>Exch 24</b> — Alaska campout tents; barn-field burgers & chili</li>
+       <li><b>Exch 27</b> — Jewell School: hot food, showers, quiet sleeping</li>
+       <li><b>Exch 30</b> — Local family fundraiser (cash only)</li>
+       <li><b>Exch 31</b> — Astoria HS Basketball fundraiser</li>
+       <li><b>Exch 33</b> — Astoria Youth Baseball breakfast</li>
+       <li><b>Finish</b> — Beach party: food, beer/wine garden, live music (Hit Machine 6:45–11PM)</li>
+     </ul>
+   </div>
+   <h2 class="sec">Seaside parking (Finish)</h2>
+   <div class="card">
+     <img class="mapimg" src="./seaside-parking.png" alt="Seaside available parking map" loading="lazy">
+     <p style="margin-top:12px"><b>Driving directions:</b> Vans follow the runner route until reaching <b>Wahanna Rd / HWY 101</b>, then turn <b>RIGHT onto HWY 101</b>. Best place to turn around is ~0.9 mi north at the <b>Pacific Way</b> signal, then proceed to available parking.</p>
+     <div class="kv"><div class="k">Parking</div><div class="v">Broadway Middle School — 1120 Broadway St · Broadway Park — 1300 Broadway St</div></div>
+     <div class="kv"><div class="k">Shuttle</div><div class="v">FREE, every 15 min to Convention Center from Northcoast Family Fellowship Church (Leg 36)</div></div>
+     <div class="kv"><div class="k">Finish</div><div class="v">Beach at the end of Broadway St ("the turnaround/prom"). Meet your anchor 1 block N where Oceanway Ave meets the beach.</div></div>
+   </div>`;
+}
+
+/* ---- Rules ---- */
+function renderRules(){
+  views.rules.innerHTML=`
+   <div class="note-box"><b>Penalties</b><br>Rules are enforced by Race Officials and by reports from two separate teams. Violations = <b>30-min</b> penalty, <b>60-min</b> penalty, or <b>disqualification (DQ)</b>.</div>
+   <h2 class="sec">Racer rules</h2>
+   <div class="card">
+     <ul>
+       <li><b>Run on the LEFT shoulder</b> at all times, single file — EXCEPT legs 1–7 & 14–16 (run right). <span class="tag">60 min</span></li>
+       <li><b>Race bibs</b> worn at all times; emergency contact filled in on the back. Leg 36 runner wears the <b>timing-chip bib</b>. <span class="tag">30 min</span></li>
+       <li><b>Night gear (6PM–7AM):</b> front + back LED flasher, flashlight/headlamp, and reflective vest (vest until 9AM). Strictly enforced. <span class="tag">DQ</span></li>
+       <li>No improper runner substitution / out-of-rotation. <span class="tag">60 min</span></li>
+       <li>Start-time violation (wrong wave). <span class="tag">DQ</span></li>
+       <li>Finishing 2.5+ hrs faster than your predicted time / starting early. <span class="tag">60 min</span></li>
+       <li>Local teams must field <b>3 volunteers</b>, each at their post. <span class="tag">DQ</span></li>
+     </ul>
+   </div>
+   <h2 class="sec">Vehicle rules</h2>
+   <div class="card">
+     <ul>
+       <li><b>No stopping to drop a runner</b> while moving; no parking within 500 ft of an exchange. <span class="tag">30 min</span></li>
+       <li><b>No following behind your runner.</b> Keep moving. <span class="tag">30 min</span></li>
+       <li>Display both <b>van signs</b> (front + rear driver-side windows). <span class="tag">60 min</span></li>
+       <li>Max size 93"W × 276"L × 107"H; seat belts required; no motorhomes/buses/limos. <span class="tag">DQ</span></li>
+       <li>Legs 19–23 & 32–36: only ONE team vehicle on the route (other takes alternate). </li>
+     </ul>
+   </div>
+   <h2 class="sec">Conduct</h2>
+   <div class="card">
+     <ul>
+       <li><b>Quiet hours 10PM–6AM</b> — no loud noise, music, or yelling.</li>
+       <li>Obey all Race Officials, ODOT & traffic safety staff. <span class="tag">60 min / DQ</span></li>
+       <li><b>No alcohol, smoking, marijuana, or drugs</b> on the course. <span class="tag">DQ</span></li>
+       <li>Sleep only in designated (roped-off) fields — never on the ground by your vehicle. Tents at Exch 18 & 24 only. <span class="tag">DQ</span></li>
+       <li>Public-nuisance (littering, trespassing, marking property incl. spray chalk). <span class="tag">DQ</span></li>
+       <li>No foul/overly suggestive van decorations or costumes.</li>
+     </ul>
+   </div>
+   <h2 class="sec">Traffic safety agreement</h2>
+   <div class="card">
+     <p>Course is on <b>open roads with regular traffic.</b> All state traffic laws apply — you can be ticketed by law enforcement.</p>
+     <ul>
+       <li>No pulling off on Leg 1 or Leg 2.</li>
+       <li>When assisting a runner, pull <b>completely off</b> the road (over the fog line).</li>
+       <li>Never block the roadway, race course, driveways, or residences.</li>
+       <li>Obey speed & DUI laws; no open containers in the vehicle.</li>
+       <li>Obey Oregon's hands-free cell law — no texting.</li>
+     </ul>
+   </div>
+   <h2 class="sec">Report a violation</h2>
+   <div class="card"><p>Report to an exchange leader or at the Finish Info tent. Note the <b>Who</b> (team # + description), <b>What</b>, <b>Where</b> (leg/exchange), and <b>When</b>.</p></div>`;
+}
+
+/* ---- Safety ---- */
+function renderSafety(){
+  views.safety.innerHTML=`
+   <div class="note-box danger"><b>Emergency</b><br>Call <b>911</b>, then find the Exchange Leader or Radio (Ham) Operator at the nearest exchange — they reach the Race Command Center for medical/police/fire. Get the runner's race #, exact location, and nature of emergency.</div>
+   <div class="card">
+     <h3>Required night gear · 6PM–7AM</h3>
+     <ul>
+       <li>Reflective vest (until <b>9AM</b>) — striping ≥ ⅓" thick on front & back. Belts/sleeves NOT accepted; a vest or Y-harness is.</li>
+       <li>Front <b>and</b> back LED flasher.</li>
+       <li>Flashlight, headlamp, or lighted hat.</li>
+     </ul>
+     <p class="muted small">Non-running teammates outside the van should also wear a vest + flasher. Bright clothing day & night.</p>
+   </div>
+   <div class="card">
+     <h3>Running at night</h3>
+     <p>Stay in reasonable contact with your van — but <b>never follow behind</b> the runner. Pull off in a safe spot off the road. No police are guaranteed for traffic protection; racers must obey all traffic laws and use the correct shoulder.</p>
+   </div>
+   <div class="card">
+     <h3>Hydration & first aid</h3>
+     <p>Only <b>one first-aid station</b> on course — <b>Exchange 18</b>. Carry large water containers to refill; the average team is out ~29 hours. Keep ice/cooling gear in the van. ColdVests are staged on course for heat stroke.</p>
+   </div>
+   <div class="card">
+     <h3>No cell coverage · Legs 19–32</h3>
+     <p>Cell service is <b>unreliable from Exch 18 until after Leg 32.</b> Bring <b>walkie-talkies</b> and use <b>AirTags</b> to track teammates. Fuel the van in <b>St. Helens</b> (Leg 17) — last reliable fuel before the coast.</p>
+   </div>
+   <div class="card">
+     <h3>Giving aid across a road</h3>
+     <p>Never cross a busy highway to aid a runner. The van must safely cross to the runner's side, park, then help.</p>
+   </div>
+   <div class="card">
+     <h3>Inclement weather</h3>
+     <p>HTC may delay or cancel for severe heat, lightning, snow, flooding, fog, etc. In extreme heat, teams may be held until the temperature drops. No refunds for weather cancellation.</p>
+   </div>`;
+}
+
+/* ---- Prep (checklists + logistics) ---- */
+function ckey(id){return "htc26_chk_"+id}
+function renderPrep(){
+  const gearHtml=GEAR.map((g,i)=>chkRow("gear"+i,g,true)).join("");
+  let packHtml="";
+  Object.entries(PACKING).forEach(([cat,items])=>{
+    packHtml+=`<h2 class="sec">${esc(cat)} <span class="progress" id="prog-${cat.replace(/\W/g,'')}"></span></h2><div class="card">`;
+    items.forEach((it,i)=>packHtml+=chkRow("pack_"+cat.replace(/\W/g,'')+"_"+i,it,false));
+    packHtml+="</div>";
+  });
+  views.prep.innerHTML=`
+   <div class="note-box"><b>Required team safety gear</b> — inspected at check-in (HTC App or Check-In Tent). Tap to check off.</div>
+   <div class="card chk-req-wrap">${gearHtml}</div>
+   <h2 class="sec">Packing list</h2>
+   <p class="muted small" style="margin:0 4px 6px">💡 Pack each running outfit in its own labeled Ziploc — easy to grab, and a place for the dirty one after.</p>
+   ${packHtml}
+   <button class="reset" id="resetChk">↺ Reset all checkboxes</button>
+
+   <h2 class="sec">Team rotation</h2>
+   <div class="card">
+     <div class="segbar" id="rotSeg" style="margin-bottom:12px">
+       <button data-size="12" class="active">12 runners</button>
+       <button data-size="10">10</button>
+       <button data-size="8">8</button>
+     </div>
+     <div class="tbl-wrap"><table id="rotTable"></table></div>
+     <p class="muted small">Runners rotate in sequence the entire race. Vans swap only at major exchanges (6, 12, 18, 24, 30).</p>
+   </div>
+
+   <h2 class="sec">Start line · Timberline</h2>
+   <div class="card">
+     <p><b>Location:</b> Lower lot of Timberline Lodge, 27500 E Timberline Rd, Government Camp, OR 97028.</p>
+     <ul>
+       <li>Arrive <b>30 min</b> before your assigned start time.</li>
+       <li>Complete the <b>Safety Pre-Check</b> in the HTC App (photo of gear) to skip lines.</li>
+       <li>Van 2 can go straight to <b>Exchange 6</b> (its first runner starts there).</li>
+       <li>No start-time requests; starting in the wrong wave = DQ.</li>
+     </ul>
+   </div>
+   <h2 class="sec">Finish · Seaside</h2>
+   <div class="card">
+     <p>First Tech Finish on the beach, N of the Broadway turnaround. Parking is tight — free shuttle every 15 min from North Coast Family Fellowship Church (Leg 36).</p>
+     <ul>
+       <li>Wait at the Team Waiting Area; join your Leg 36 runner down the chute together.</li>
+       <li>Leg 36 runner MUST wear the <b>timing-chip bib.</b></li>
+       <li>Medals given as the anchor crosses (not mailed). Awards to top 6 per category, 6–8PM at the Info tent.</li>
+     </ul>
+   </div>
+   <h2 class="sec">Key contacts & links</h2>
+   <div class="card">
+     <div class="kv"><div class="k">Roster/Subs</div><div class="v"><a href="https://register.hoodtocoast.com">register.hoodtocoast.com</a></div></div>
+     <div class="kv"><div class="k">Volunteer</div><div class="v"><a href="https://volunteer.hoodtocoast.com">volunteer.hoodtocoast.com</a></div></div>
+     <div class="kv"><div class="k">Website</div><div class="v"><a href="https://www.hoodtocoast.com">hoodtocoast.com</a></div></div>
+     <div class="kv"><div class="k">Results</div><div class="v"><a href="https://hoodtocoast.com/htc-ptc">hoodtocoast.com/htc-ptc</a></div></div>
+     <div class="kv"><div class="k">Office</div><div class="v">office@htcrelay.com</div></div>
+     <div class="kv"><div class="k">Social</div><div class="v">#HTC26 · @htcrelay</div></div>
+   </div>
+   <div class="foot">Unofficial offline driver reference · Built from the HTC 2026 Driver Handbook.<br>Verify against the official Hood To Coast handbook & app before race day.</div>`;
+
+  // wire checkboxes
+  $$(".chk").forEach(c=>{
+    const id=c.dataset.id;
+    if(localStorage.getItem(ckey(id))==="1")c.classList.add("done");
+    c.onclick=()=>{c.classList.toggle("done");
+      localStorage.setItem(ckey(id),c.classList.contains("done")?"1":"0");updateProg();};
+  });
+  $("#resetChk").onclick=()=>{Object.keys(localStorage).filter(k=>k.startsWith("htc26_chk_")).forEach(k=>localStorage.removeItem(k));renderPrep();};
+  // rotation
+  const rotSeg=$("#rotSeg");
+  rotSeg.querySelectorAll("button").forEach(b=>b.onclick=()=>{rotSeg.querySelectorAll("button").forEach(x=>x.classList.remove("active"));b.classList.add("active");drawRot(+b.dataset.size);});
+  drawRot(12); updateProg();
+}
+function chkRow(id,label,req){
+  return `<div class="chk ${req?'chk-req':''}" data-id="${id}"><div class="box">✓</div><div class="lbl">${esc(label)}</div></div>`;
+}
+function updateProg(){
+  Object.entries(PACKING).forEach(([cat,items])=>{
+    const key=cat.replace(/\W/g,'');
+    const done=items.filter((_,i)=>localStorage.getItem(ckey("pack_"+key+"_"+i))==="1").length;
+    const el=$("#prog-"+key); if(el)el.textContent=done+"/"+items.length;
+  });
+}
+function drawRot(size){
+  const rows=ROTATION[size];
+  $("#rotTable").innerHTML=`<thead><tr><th>Leg #</th><th>Runner #</th></tr></thead><tbody>`+
+    rows.map(r=>`<tr><td>${r[0]}</td><td class="name" style="text-align:center">Runner ${r[1]}</td></tr>`).join("")+`</tbody>`;
+}
+
+/* ---- Clock ---- */
+// leg -> {van,runner} from the difficulty/assignment table
+const LEGINFO={};
+DIFF.forEach(r=>{[r[2],r[3],r[4]].forEach(x=>LEGINFO[x[0]]={van:r[0],runner:r[1]});});
+// cumulative miles at the START of each leg, and total
+const CUM={}; let _c=0;
+LEGS.forEach(l=>{CUM[l.n]=_c;_c+=l.mi;});
+const TOTAL_MI=_c;
+const SK={start:"htc26_start",pace:"htc26_pace"};
+let clockTimer=null;
+
+function pace(){return parseFloat(localStorage.getItem(SK.pace))||8.8;}
+function startMs(){const s=localStorage.getItem(SK.start);return s?new Date(s).getTime():null;}
+function fmtClock(ms){const d=new Date(ms);let h=d.getHours(),m=d.getMinutes();const ap=h<12?"AM":"PM";h=h%12||12;
+  return h+":"+String(m).padStart(2,"0")+" "+ap;}
+function fmtDur(min){if(min<0)min=0;const h=Math.floor(min/60),m=Math.round(min%60);return h+"h "+String(m).padStart(2,"0")+"m";}
+function legStartMin(n){return CUM[n]*pace();}
+function legEndMin(n){return (CUM[n]+LEGS.find(l=>l.n===n).mi)*pace();}
+
+function renderClock(){
+  const st=startMs(), p=pace();
+  const setup=`
+    <div class="card">
+      <h3>Your team's race plan</h3>
+      <div class="field"><label>Start date & time (at Timberline)</label>
+        <input type="datetime-local" id="startIn" value="${localStorage.getItem(SK.start)||""}"></div>
+      <div class="field"><label>Average team pace (min / mile)</label>
+        <div class="pace-row"><input type="number" id="paceIn" step="0.1" min="4" max="15" value="${p}">
+        <span class="muted small">≈ ${fmtDur(TOTAL_MI*p)} total</span></div></div>
+      <button class="btn-primary" id="saveClock">Save & start the clock</button>
+      <p class="muted small" style="margin-top:10px">Estimates when each runner is on course and when to be at the next exchange, using your pace × the ${TOTAL_MI.toFixed(1)}-mi course. Adjust pace anytime — a typical team runs ~8.5–9.5.</p>
+    </div>`;
+  if(!st){views.clock.innerHTML=`<div class="note-box">Set your start time to turn on the live race clock, projected exchange times, and "who's running now."</div>`+setup;wireClock();return;}
+
+  const now=Date.now();
+  const elapsedMin=(now-st)/60000;
+  let statusHtml;
+  if(elapsedMin<0){
+    statusHtml=`<div class="status">Race starts in<span class="big">${fmtDur(-elapsedMin)}</span>at ${fmtClock(st)}</div>`;
+  } else if(elapsedMin>=legEndMin(36)){
+    statusHtml=`<div class="status">🏁 Projected finish reached!<span class="big">${fmtClock(st+legEndMin(36)*60000)}</span></div>`;
+  } else {
+    const cur=LEGS.find(l=>elapsedMin>=legStartMin(l.n)&&elapsedMin<legEndMin(l.n));
+    const li=LEGINFO[cur.n];
+    const toNext=legEndMin(cur.n)-elapsedMin;
+    statusHtml=`<div class="status">Now running · <span class="van-chip ${li.van===2?'v2':''}">Van ${li.van} · R${li.runner}</span>
+      <span class="big">Leg ${cur.n} <span class="pill ${cur.d}" style="font-size:11px;vertical-align:middle">${cur.d}</span></span>
+      Next exchange (${cur.n===36?"Finish":"Exch "+cur.n}) in ~${fmtDur(toNext)} · ETA ${fmtClock(st+legEndMin(cur.n)*60000)}</div>`;
+  }
+  const rows=LEGS.map(l=>{
+    const li=LEGINFO[l.n], eta=st+legEndMin(l.n)*60000;
+    const isNow=elapsedMin>=legStartMin(l.n)&&elapsedMin<legEndMin(l.n);
+    const done=elapsedMin>=legEndMin(l.n);
+    return `<tr class="${isNow?'nowrow':''} ${done?'doner':''}">
+      <td><span class="van-chip ${li.van===2?'v2':''}">V${li.van}</span></td>
+      <td class="legc">Leg ${l.n} · R${li.runner}</td>
+      <td>${l.mi}</td>
+      <td>${fmtClock(st+legStartMin(l.n)*60000)}</td>
+      <td>${fmtClock(eta)}</td></tr>`;
+  }).join("");
+  views.clock.innerHTML=`
+    <div class="clock-hero">
+      <div class="now" id="liveNow">${fmtClock(now)}</div>
+      <div class="elapsed">${elapsedMin>=0?"Elapsed "+fmtDur(elapsedMin)+" · started "+fmtClock(st):"Starts "+fmtClock(st)}</div>
+      ${statusHtml}
+    </div>
+    <h2 class="sec">Projected schedule <span class="progress">tap Clock to refresh</span></h2>
+    <div class="tbl-wrap"><table class="sched">
+      <thead><tr><th>Van</th><th>Leg · Runner</th><th>Mi</th><th>Start</th><th>Exch by</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <button class="reset" id="editClock" style="margin-top:12px">⚙ Change start time / pace</button>`;
+  $("#editClock").onclick=()=>{views.clock.innerHTML=setup;wireClock();};
+  // live tick
+  clearInterval(clockTimer);
+  clockTimer=setInterval(()=>{const el=$("#liveNow");if(el&&curTab==="clock"){el.textContent=fmtClock(Date.now());}else{clearInterval(clockTimer);}},1000);
+}
+function wireClock(){
+  const sv=$("#saveClock");if(!sv)return;
+  sv.onclick=()=>{
+    const s=$("#startIn").value, p=$("#paceIn").value;
+    if(!s){$("#startIn").focus();return;}
+    localStorage.setItem(SK.start,s);
+    localStorage.setItem(SK.pace,parseFloat(p)||8.8);
+    renderClock();
+  };
+}
+
+/* ---- Nav wiring ---- */
+$$("#tabbar button").forEach(b=>b.onclick=()=>{
+  const t=b.dataset.tab;
+  if(t==="clock")renderClock();
+  if(t==="course"&&!views.course.innerHTML)renderCourse();
+  if(t==="rules"&&!views.rules.innerHTML)renderRules();
+  if(t==="safety"&&!views.safety.innerHTML)renderSafety();
+  if(t==="prep")renderPrep();
+  setTab(t);
+});
+$("#legSearch").oninput=e=>{curSearch=e.target.value;renderLegs();};
+$$("#vanSeg button").forEach(b=>b.onclick=()=>{
+  $$("#vanSeg button").forEach(x=>x.classList.remove("active"));b.classList.add("active");
+  curVan=b.dataset.van;renderLegs();
+});
+
+renderLegs();
+
+/* ---- Service worker (offline) ---- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
