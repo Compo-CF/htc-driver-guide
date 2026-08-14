@@ -190,7 +190,20 @@ tr.doner td{color:var(--muted2)}
 .van-chip{font-size:10px;font-weight:800;padding:1px 5px;border-radius:5px;color:#fff;background:var(--accent2)}
 .van-chip.v2{background:#8b5cf6}
 img.mapimg{width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.1);display:block;background:#fff}
-img.legmap{width:100%;display:block;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#fff}
+img.legmap{width:100%;display:block;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#fff;cursor:zoom-in}
+img.mapimg{cursor:zoom-in}
+/* lightbox */
+.lb{position:fixed;inset:0;z-index:100;background:rgba(6,10,18,.97);touch-action:none;overscroll-behavior:contain}
+.lb-stage{position:absolute;inset:0;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none}
+.lb-img{max-width:100%;max-height:100%;transform-origin:center center;will-change:transform;
+  user-select:none;-webkit-user-select:none;-webkit-user-drag:none;background:#fff;border-radius:4px}
+.lb-close{position:absolute;top:calc(var(--safe-top) + 10px);right:14px;z-index:3;background:rgba(255,255,255,.14);
+  border:0;color:#fff;font-size:20px;font-weight:700;width:44px;height:44px;border-radius:50%;cursor:pointer;line-height:1}
+.lb-close:active{background:rgba(255,255,255,.28)}
+.lb-cap{position:absolute;top:calc(var(--safe-top) + 16px);left:16px;z-index:2;color:#fff;font-size:15px;font-weight:700;
+  text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.lb-hint{position:absolute;bottom:calc(var(--safe-bot) + 16px);left:0;right:0;text-align:center;color:#aab6cf;
+  font-size:12px;pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,.8)}
 /* home */
 header.clickable{cursor:pointer}
 .home-hero{background:linear-gradient(135deg,#12305a,#1a1233);border:1px solid rgba(77,163,255,.2);
@@ -260,6 +273,13 @@ header.clickable{cursor:pointer}
   <!-- PREP -->
   <section class="view hidden" id="view-prep"></section>
 </main>
+
+<div id="lightbox" class="lb hidden" aria-hidden="true">
+  <div class="lb-cap" id="lbCap"></div>
+  <button class="lb-close" id="lbClose" aria-label="Close">✕</button>
+  <div class="lb-stage" id="lbStage"><img class="lb-img" id="lbImg" alt=""></div>
+  <div class="lb-hint">Pinch or double-tap to zoom · drag to pan</div>
+</div>
 
 <nav id="tabbar">
   <button data-tab="legs" class="active">
@@ -565,8 +585,8 @@ function openLeg(n){
     ${alerts}
     <div class="card">
       <h3>Route map</h3>
-      <a href="./legmaps/leg-${n}.jpg" target="_blank" rel="noopener"><img class="legmap" src="./legmaps/leg-${n}.jpg" loading="lazy" alt="Leg ${n} route map"></a>
-      <p class="muted small" style="margin-bottom:0">Handbook route map — the red line is this leg. Tap to enlarge.</p>
+      <img class="legmap" src="./legmaps/leg-${n}.jpg" loading="lazy" alt="Leg ${n} route map" onclick="openLightbox('./legmaps/leg-${n}.jpg','Leg ${n} route map')">
+      <p class="muted small" style="margin-bottom:0">Handbook route map — the red line is this leg. Tap to zoom.</p>
     </div>
     <div class="card">
       <h3>Turn-by-turn <span class="progress">${esc(l.side||"")}</span></h3>
@@ -637,7 +657,7 @@ function renderCourse(){
    </div>
    <h2 class="sec">Seaside parking (Finish)</h2>
    <div class="card">
-     <img class="mapimg" src="./seaside-parking.png" alt="Seaside available parking map" loading="lazy">
+     <img class="mapimg" src="./seaside-parking.png" alt="Seaside available parking map" loading="lazy" onclick="openLightbox('./seaside-parking.png','Seaside parking')">
      <p style="margin-top:12px"><b>Driving directions:</b> Vans follow the runner route until reaching <b>Wahanna Rd / HWY 101</b>, then turn <b>RIGHT onto HWY 101</b>. Best place to turn around is ~0.9 mi north at the <b>Pacific Way</b> signal, then proceed to available parking.</p>
      <div class="kv"><div class="k">Parking</div><div class="v">Broadway Middle School — 1120 Broadway St · Broadway Park — 1300 Broadway St</div></div>
      <div class="kv"><div class="k">Shuttle</div><div class="v">FREE, every 15 min to Convention Center from Northcoast Family Fellowship Church (Leg 36)</div></div>
@@ -908,7 +928,7 @@ function wireClock(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="2.4";
+const APP_VERSION="2.5";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -1017,6 +1037,74 @@ $$("#vanSeg button").forEach(b=>b.onclick=()=>{
 });
 
 $("#appHeader").onclick=goHome;
+
+/* ---- Image lightbox (offline pinch/pan zoom) ---- */
+(function(){
+  const lb=$("#lightbox"), stage=$("#lbStage"), img=$("#lbImg"), cap=$("#lbCap");
+  let scale=1,tx=0,ty=0;
+  const pts=new Map(); let lastDist=0,lastMid=null,lastPan=null,moved=false,lastTap=0,lastTapXY=null;
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  function apply(){img.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;}
+  function reset(){scale=1;tx=0;ty=0;apply();}
+  function center(){const r=stage.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};}
+  window.openLightbox=function(src,caption){
+    img.src=src; img.alt=caption||""; cap.textContent=caption||"";
+    reset(); lb.classList.remove("hidden"); lb.setAttribute("aria-hidden","false");
+    document.body.style.overflow="hidden";
+  };
+  function close(){lb.classList.add("hidden");lb.setAttribute("aria-hidden","true");document.body.style.overflow="";img.src="";}
+  $("#lbClose").onclick=close;
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!lb.classList.contains("hidden"))close();});
+  function zoomAround(qx,qy,s2){
+    const c=center(), fx=qx-c.x, fy=qy-c.y;
+    tx=fx-(fx-tx)*(s2/scale); ty=fy-(fy-ty)*(s2/scale); scale=s2; apply();
+  }
+  stage.addEventListener("pointerdown",e=>{
+    stage.setPointerCapture(e.pointerId);
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); moved=false;
+    if(pts.size===1){lastPan={x:e.clientX,y:e.clientY};}
+    if(pts.size===2){lastDist=0;lastMid=null;}
+  });
+  stage.addEventListener("pointermove",e=>{
+    if(!pts.has(e.pointerId))return;
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    const a=[...pts.values()];
+    if(a.length>=2){
+      e.preventDefault(); moved=true;
+      const dist=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
+      const mid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};
+      if(lastDist&&lastMid){
+        tx+=mid.x-lastMid.x; ty+=mid.y-lastMid.y;
+        zoomAround(mid.x,mid.y,clamp(scale*(dist/lastDist),1,6));
+      }
+      lastDist=dist; lastMid=mid;
+    } else if(a.length===1&&scale>1&&lastPan){
+      e.preventDefault(); moved=true;
+      tx+=e.clientX-lastPan.x; ty+=e.clientY-lastPan.y; lastPan={x:e.clientX,y:e.clientY}; apply();
+    }
+  });
+  function endPtr(e){
+    pts.delete(e.pointerId);
+    if(pts.size===1){const p=[...pts.values()][0];lastPan={x:p.x,y:p.y};lastDist=0;lastMid=null;}
+    if(pts.size===0){
+      if(scale<=1.02){reset();}
+      if(!moved){ // tap
+        const now=Date.now();
+        if(now-lastTap<300&&lastTapXY&&Math.hypot(e.clientX-lastTapXY.x,e.clientY-lastTapXY.y)<40){
+          if(scale>1.02)reset(); else zoomAround(e.clientX,e.clientY,2.6);
+          lastTap=0;
+        } else {
+          lastTap=now; lastTapXY={x:e.clientX,y:e.clientY};
+          // single tap on backdrop (image not filling) closes when not zoomed
+          if(scale<=1.02&&e.target!==img)close();
+        }
+      }
+    }
+  }
+  stage.addEventListener("pointerup",endPtr);
+  stage.addEventListener("pointercancel",e=>{pts.delete(e.pointerId);});
+  stage.addEventListener("wheel",e=>{e.preventDefault();zoomAround(e.clientX,e.clientY,clamp(scale*(e.deltaY<0?1.15:0.87),1,6));if(scale<=1.02)reset();},{passive:false});
+})();
 
 renderLegs();
 renderHome();   // land on Home
