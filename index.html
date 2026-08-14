@@ -190,6 +190,7 @@ tr.doner td{color:var(--muted2)}
 .van-chip{font-size:10px;font-weight:800;padding:1px 5px;border-radius:5px;color:#fff;background:var(--accent2)}
 .van-chip.v2{background:#8b5cf6}
 img.mapimg{width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.1);display:block;background:#fff}
+img.legmap{width:100%;display:block;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#fff}
 /* home */
 header.clickable{cursor:pointer}
 .home-hero{background:linear-gradient(135deg,#12305a,#1a1233);border:1px solid rgba(77,163,255,.2);
@@ -563,6 +564,11 @@ function openLeg(n){
     <div class="addr" style="margin:-4px 4px 12px">${esc(l.exch)}<br>GPS ${l.lat}, ${l.lng}</div>
     ${alerts}
     <div class="card">
+      <h3>Route map</h3>
+      <a href="./legmaps/leg-${n}.jpg" target="_blank" rel="noopener"><img class="legmap" src="./legmaps/leg-${n}.jpg" loading="lazy" alt="Leg ${n} route map"></a>
+      <p class="muted small" style="margin-bottom:0">Handbook route map — the red line is this leg. Tap to enlarge.</p>
+    </div>
+    <div class="card">
       <h3>Turn-by-turn <span class="progress">${esc(l.side||"")}</span></h3>
       ${dirRows}
     </div>
@@ -575,7 +581,7 @@ function openLeg(n){
       ${n>1?`<button class="reset" style="flex:1;margin:0" onclick="openLeg(${n-1})">‹ Leg ${n-1}</button>`:""}
       ${n<36?`<button class="reset" style="flex:1;margin:0" onclick="openLeg(${n+1})">Leg ${n+1} ›</button>`:""}
     </div>`;
-  views.legs.classList.add("hidden");
+  Object.values(views).forEach(v=>v.classList.add("hidden"));
   views.detail.classList.remove("hidden");
   $("#h-title-txt").textContent="Leg "+n;
   window.scrollTo(0,0);
@@ -902,7 +908,7 @@ function wireClock(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="2.3";
+const APP_VERSION="2.4";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
