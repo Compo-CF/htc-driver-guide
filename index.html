@@ -567,10 +567,11 @@ function openLeg(n){
     return `<div class="dir ${fin?'fin':''} ${st?'start':''}"><div class="mi">${d[0]}</div><div class="ar">${d[1]}</div><div class="tx">${esc(d[2])}</div></div>`;
   }).join("");
   const kv=(k,v)=>v?`<div class="kv"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`:"";
+  const rn=TEAM[LEGINFO[n].runner];
   $("#detailBody").innerHTML=`
     <div class="detail-head">
       <div class="top">
-        <div><h2>Leg ${l.n}${n===36?" · Finish":""}</h2><div class="ded">${vanTxt} · In memory/honor of ${esc(l.name)}</div></div>
+        <div><h2>Leg ${l.n}${n===36?" · Finish":""}</h2><div class="ded">${vanTxt} · 🏃 <b style="color:var(--text)">${esc(rn.n)}</b> · ${rn.p} pace</div></div>
         <span class="pill ${l.d}" style="font-size:12px">${({E:"Easy",M:"Moderate",H:"Hard",VH:"Very Hard"})[l.d]}</span>
       </div>
       ${l.major?`<div style="margin-top:8px"><span class="tag" style="background:rgba(255,159,67,.18);color:#ffc98a">⭐ ${esc(l.major)}</span></div>`:""}
@@ -770,16 +771,17 @@ function renderPrep(){
    ${packHtml}
    <button class="reset" id="resetChk">↺ Reset all checkboxes</button>
 
-   <h2 class="sec">Team rotation</h2>
+   <h2 class="sec">Our roster · Van 1</h2>
    <div class="card">
-     <div class="segbar" id="rotSeg" style="margin-bottom:12px">
-       <button data-size="12" class="active">12 runners</button>
-       <button data-size="10">10</button>
-       <button data-size="8">8</button>
-     </div>
-     <div class="tbl-wrap"><table id="rotTable"></table></div>
-     <p class="muted small">Runners rotate in sequence the entire race. Vans swap only at major exchanges (6, 12, 18, 24, 30).</p>
+     <div class="tbl-wrap">${rosterTable(1)}</div>
+     <p class="muted small" style="margin-bottom:0"><b>🚐 Drivers:</b> ${DRIVERS[1].join(" · ")}</p>
    </div>
+   <h2 class="sec">Our roster · Van 2</h2>
+   <div class="card">
+     <div class="tbl-wrap">${rosterTable(2)}</div>
+     <p class="muted small" style="margin-bottom:0"><b>🚐 Drivers:</b> ${DRIVERS[2].join(" · ")}</p>
+   </div>
+   <p class="muted small" style="margin:0 4px 6px">Each runner runs 3 legs in rotation. Vans swap only at major exchanges (6, 12, 18, 24, 30). Paces feed the Race Clock.</p>
 
    <h2 class="sec">Start line · Timberline</h2>
    <div class="card">
@@ -819,10 +821,7 @@ function renderPrep(){
       localStorage.setItem(ckey(id),c.classList.contains("done")?"1":"0");updateProg();};
   });
   $("#resetChk").onclick=()=>{Object.keys(localStorage).filter(k=>k.startsWith("htc26_chk_")).forEach(k=>localStorage.removeItem(k));renderPrep();};
-  // rotation
-  const rotSeg=$("#rotSeg");
-  rotSeg.querySelectorAll("button").forEach(b=>b.onclick=()=>{rotSeg.querySelectorAll("button").forEach(x=>x.classList.remove("active"));b.classList.add("active");drawRot(+b.dataset.size);});
-  drawRot(12); updateProg();
+  updateProg();
 }
 function chkRow(id,label,req){
   return `<div class="chk ${req?'chk-req':''}" data-id="${id}"><div class="box">✓</div><div class="lbl">${esc(label)}</div></div>`;
@@ -834,10 +833,14 @@ function updateProg(){
     const el=$("#prog-"+key); if(el)el.textContent=done+"/"+items.length;
   });
 }
-function drawRot(size){
-  const rows=ROTATION[size];
-  $("#rotTable").innerHTML=`<thead><tr><th>Leg #</th><th>Runner #</th></tr></thead><tbody>`+
-    rows.map(r=>`<tr><td>${r[0]}</td><td class="name" style="text-align:center">Runner ${r[1]}</td></tr>`).join("")+`</tbody>`;
+function rosterTable(van){
+  const nums=van===1?[1,2,3,4,5,6]:[7,8,9,10,11,12];
+  const body=nums.map(k=>{
+    const t=TEAM[k], legs=[k,k+12,k+24].join(", ");
+    return `<tr><td><span class="van-chip ${van===2?'v2':''}">R${k}</span></td>
+      <td class="name" style="text-align:left">${esc(t.n)}</td><td>${legs}</td><td>${t.p}</td></tr>`;
+  }).join("");
+  return `<table><thead><tr><th>#</th><th>Runner</th><th>Legs</th><th>Pace</th></tr></thead><tbody>${body}</tbody></table>`;
 }
 
 /* ---- Clock ---- */
@@ -848,31 +851,43 @@ DIFF.forEach(r=>{[r[2],r[3],r[4]].forEach(x=>LEGINFO[x[0]]={van:r[0],runner:r[1]
 const CUM={}; let _c=0;
 LEGS.forEach(l=>{CUM[l.n]=_c;_c+=l.mi;});
 const TOTAL_MI=_c;
-const SK={start:"htc26_start",pace:"htc26_pace"};
-let clockTimer=null;
+// Our team roster: runner # -> name + pace (min/mile). Van 1 = runners 1–6, Van 2 = 7–12.
+const TEAM={
+  1:{n:"Milliron",p:8.45}, 2:{n:"Barnwell",p:7.45}, 3:{n:"Max / George",p:8.45},
+  4:{n:"Ponce",p:7.45}, 5:{n:"Lopez Lomong",p:6}, 6:{n:"Tim Green",p:9},
+  7:{n:"Palmenberg",p:8}, 8:{n:"Simmonds",p:8.3}, 9:{n:"Levi",p:8.45},
+  10:{n:"Erik Ochoa",p:9}, 11:{n:"Campbell",p:9}, 12:{n:"Kevin McKenna",p:8.45}
+};
+const DRIVERS={1:["Sean Ward","Ross Buttermore"], 2:["Anthony (Compo)","Brad Zarin"]};
+function runnerOf(leg){return TEAM[LEGINFO[leg].runner];}
 
-function pace(){return parseFloat(localStorage.getItem(SK.pace))||8.8;}
+const SK={start:"htc26_start",factor:"htc26_pacefactor"};
+let clockTimer=null;
+const clampF=v=>Math.max(0.8,Math.min(1.2,v));
+function factor(){return clampF(parseFloat(localStorage.getItem(SK.factor))||1);}
 function startMs(){const s=localStorage.getItem(SK.start);return s?new Date(s).getTime():null;}
 function fmtClock(ms){const d=new Date(ms);let h=d.getHours(),m=d.getMinutes();const ap=h<12?"AM":"PM";h=h%12||12;
   return h+":"+String(m).padStart(2,"0")+" "+ap;}
 function fmtDur(min){if(min<0)min=0;const h=Math.floor(min/60),m=Math.round(min%60);return h+"h "+String(m).padStart(2,"0")+"m";}
-function legStartMin(n){return CUM[n]*pace();}
-function legEndMin(n){return (CUM[n]+LEGS.find(l=>l.n===n).mi)*pace();}
+// each leg is timed by its assigned runner's own pace × the global adjustment factor
+function legDurMin(n){const l=LEGS.find(x=>x.n===n);return l.mi*runnerOf(n).p*factor();}
+function legStartMin(n){let t=0;for(let i=1;i<n;i++)t+=legDurMin(i);return t;}
+function legEndMin(n){return legStartMin(n)+legDurMin(n);}
+function totalMin(){return legEndMin(36);}
 
-function renderClock(){
-  const st=startMs(), p=pace();
-  const setup=`
+function clockSetup(){
+  return `<div class="note-box">Set your start time to turn on the live race clock, each runner's ETAs, and "who's running now." Paces come from your roster (Prep tab).</div>
     <div class="card">
       <h3>Your team's race plan</h3>
       <div class="field"><label>Start date & time (at Timberline)</label>
         <input type="datetime-local" id="startIn" value="${localStorage.getItem(SK.start)||""}"></div>
-      <div class="field"><label>Average team pace (min / mile)</label>
-        <div class="pace-row"><input type="number" id="paceIn" step="0.1" min="4" max="15" value="${p}">
-        <span class="muted small">≈ ${fmtDur(TOTAL_MI*p)} total</span></div></div>
+      <p class="muted small" style="margin:2px 2px 12px">Projected finish: <b>${fmtDur(totalMin())}</b> after your start — each leg timed by its runner's own pace.</p>
       <button class="btn-primary" id="saveClock">Save & start the clock</button>
-      <p class="muted small" style="margin-top:10px">Estimates when each runner is on course and when to be at the next exchange, using your pace × the ${TOTAL_MI.toFixed(1)}-mi course. Adjust pace anytime — a typical team runs ~8.5–9.5.</p>
     </div>`;
-  if(!st){views.clock.innerHTML=`<div class="note-box">Set your start time to turn on the live race clock, projected exchange times, and "who's running now."</div>`+setup;wireClock();return;}
+}
+function renderClock(){
+  const st=startMs();
+  if(!st){views.clock.innerHTML=clockSetup();wireClock();return;}
 
   const now=Date.now();
   const elapsedMin=(now-st)/60000;
@@ -883,19 +898,19 @@ function renderClock(){
     statusHtml=`<div class="status">🏁 Projected finish reached!<span class="big">${fmtClock(st+legEndMin(36)*60000)}</span></div>`;
   } else {
     const cur=LEGS.find(l=>elapsedMin>=legStartMin(l.n)&&elapsedMin<legEndMin(l.n));
-    const li=LEGINFO[cur.n];
+    const li=LEGINFO[cur.n], r=runnerOf(cur.n);
     const toNext=legEndMin(cur.n)-elapsedMin;
-    statusHtml=`<div class="status">Now running · <span class="van-chip ${li.van===2?'v2':''}">Van ${li.van} · R${li.runner}</span>
-      <span class="big">Leg ${cur.n} <span class="pill ${cur.d}" style="font-size:11px;vertical-align:middle">${cur.d}</span></span>
+    statusHtml=`<div class="status">Now running · <span class="van-chip ${li.van===2?'v2':''}">Van ${li.van}</span>
+      <span class="big">${esc(r.n)} · Leg ${cur.n} <span class="pill ${cur.d}" style="font-size:11px;vertical-align:middle">${cur.d}</span></span>
       Next exchange (${cur.n===36?"Finish":"Exch "+cur.n}) in ~${fmtDur(toNext)} · ETA ${fmtClock(st+legEndMin(cur.n)*60000)}</div>`;
   }
   const rows=LEGS.map(l=>{
-    const li=LEGINFO[l.n], eta=st+legEndMin(l.n)*60000;
+    const li=LEGINFO[l.n], r=runnerOf(l.n), eta=st+legEndMin(l.n)*60000;
     const isNow=elapsedMin>=legStartMin(l.n)&&elapsedMin<legEndMin(l.n);
     const done=elapsedMin>=legEndMin(l.n);
     return `<tr class="${isNow?'nowrow':''} ${done?'doner':''}">
       <td><span class="van-chip ${li.van===2?'v2':''}">V${li.van}</span></td>
-      <td class="legc">Leg ${l.n} · R${li.runner}</td>
+      <td class="legc">Leg ${l.n} · ${esc(r.n)}</td>
       <td>${l.mi}</td>
       <td>${fmtClock(st+legStartMin(l.n)*60000)}</td>
       <td>${fmtClock(eta)}</td></tr>`;
@@ -906,29 +921,35 @@ function renderClock(){
       <div class="elapsed">${elapsedMin>=0?"Elapsed "+fmtDur(elapsedMin)+" · started "+fmtClock(st):"Starts "+fmtClock(st)}</div>
       ${statusHtml}
     </div>
+    <div class="card" style="display:flex;align-items:center;gap:10px;padding:12px 14px;margin-bottom:12px">
+      <div style="flex:1"><b>Pace</b> <span class="muted small">${Math.round(factor()*100)}% of roster · finish ${fmtClock(st+totalMin()*60000)}</span></div>
+      <button class="reset" id="pDown" style="margin:0;width:50px">−5%</button>
+      <button class="reset" id="pUp" style="margin:0;width:50px">+5%</button>
+    </div>
     <h2 class="sec">Projected schedule <span class="progress">tap Clock to refresh</span></h2>
     <div class="tbl-wrap"><table class="sched">
       <thead><tr><th>Van</th><th>Leg · Runner</th><th>Mi</th><th>Start</th><th>Exch by</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
-    <button class="reset" id="editClock" style="margin-top:12px">⚙ Change start time / pace</button>`;
-  $("#editClock").onclick=()=>{views.clock.innerHTML=setup;wireClock();};
-  // live tick
+    <button class="reset" id="editClock" style="margin-top:12px">⚙ Change start time</button>`;
+  const bump=d=>{localStorage.setItem(SK.factor,clampF(factor()+d).toFixed(2));renderClock();};
+  $("#pDown").onclick=()=>bump(-0.05); $("#pUp").onclick=()=>bump(0.05);
+  $("#editClock").onclick=()=>{views.clock.innerHTML=clockSetup();wireClock();};
   clearInterval(clockTimer);
   clockTimer=setInterval(()=>{const el=$("#liveNow");if(el&&curTab==="clock"){el.textContent=fmtClock(Date.now());}else{clearInterval(clockTimer);}},1000);
 }
 function wireClock(){
   const sv=$("#saveClock");if(!sv)return;
   sv.onclick=()=>{
-    const s=$("#startIn").value, p=$("#paceIn").value;
+    const s=$("#startIn").value;
     if(!s){$("#startIn").focus();return;}
     localStorage.setItem(SK.start,s);
-    localStorage.setItem(SK.pace,parseFloat(p)||8.8);
+    if(!localStorage.getItem(SK.factor))localStorage.setItem(SK.factor,"1");
     renderClock();
   };
 }
 
 /* ---- Home ---- */
-const APP_VERSION="2.5";
+const APP_VERSION="2.6";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -951,9 +972,9 @@ function renderHome(){
     const el=(Date.now()-st)/60000;
     if(el>=0 && el<legEndMin(36)){
       const cur=LEGS.find(l=>el>=legStartMin(l.n)&&el<legEndMin(l.n));
-      if(cur){const li=LEGINFO[cur.n];
+      if(cur){const li=LEGINFO[cur.n], r=runnerOf(cur.n);
         nowCard=`<div class="card" style="cursor:pointer" onclick="setTab('clock')"><h3>⏱ On course now</h3>
-          <p>Van ${li.van} · Runner ${li.runner} · <b>Leg ${cur.n}</b> — next exchange ETA <b>${fmtClock(st+legEndMin(cur.n)*60000)}</b>. Tap for the race clock ›</p></div>`;}
+          <p><b>${esc(r.n)}</b> · Van ${li.van} · <b>Leg ${cur.n}</b> — next exchange ETA <b>${fmtClock(st+legEndMin(cur.n)*60000)}</b>. Tap for the race clock ›</p></div>`;}
     }
   }
   const btn=(tab,label,sub)=>`<button class="home-btn" onclick="setTab('${tab}')"><svg viewBox="0 0 24 24">${ICON[tab]}</svg><div><div class="t">${label}</div><div class="s">${sub}</div></div></button>`;
