@@ -545,10 +545,11 @@ function renderLegs(){
   if(!items.length){list.innerHTML='<div class="card"><p class="muted">No legs match "'+esc(curSearch)+'".</p></div>';return}
   items.forEach(l=>{
     const vanTxt=l.van===0?"1&2":l.van;
+    const rn=TEAM[LEGINFO[l.n].runner];
     const el=document.createElement("div");el.className="leg-item";
     el.innerHTML=`<div class="leg-num">${l.n}<span class="van ${l.van===2?'v2':''}">V${vanTxt}</span></div>
       <div class="leg-body">
-        <div class="leg-title">Leg ${l.n} <span class="pill ${l.d}">${l.d}</span></div>
+        <div class="leg-title">Leg ${l.n} · ${esc(rn.n)} <span class="pill ${l.d}">${l.d}</span></div>
         <div class="leg-meta">${l.mi} mi · ${esc(l.exch.split("—")[0].trim())}${l.major?' · ⭐ '+esc(l.major.split('·')[0].trim()):''}</div>
       </div><div class="chev">›</div>`;
     el.onclick=()=>openLeg(l.n);
@@ -612,7 +613,7 @@ $("#detailBack").onclick=()=>{views.detail.classList.add("hidden");views.legs.cl
 /* ---- Course ---- */
 function renderCourse(){
   const rateCell=r=>`<span class="dot ${r[2]}"></span>${r[0]}<br><span class="muted small">${r[1]}·${r[2]}</span>`;
-  const rows=DIFF.map(row=>`<tr><td>${row[0]}</td><td class="name">R${row[1]}</td>
+  const rows=DIFF.map(row=>`<tr><td><span class="van-chip ${row[0]===2?'v2':''}">V${row[0]}</span></td><td class="name" style="text-align:left">${esc(TEAM[row[1]].n)}<br><span class="muted small">R${row[1]}</span></td>
      <td>${rateCell(row[2])}</td><td>${rateCell(row[3])}</td><td>${rateCell(row[4])}</td>
      <td><b>${row[5].toFixed(2)}</b></td></tr>`).join("");
   views.course.innerHTML=`
@@ -949,7 +950,7 @@ function wireClock(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="2.6";
+const APP_VERSION="2.7";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
