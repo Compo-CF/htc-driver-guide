@@ -572,7 +572,7 @@ function openLeg(n){
   $("#detailBody").innerHTML=`
     <div class="detail-head">
       <div class="top">
-        <div><h2>Leg ${l.n}${n===36?" · Finish":""}</h2><div class="ded">${vanTxt} · 🏃 <b style="color:var(--text)">${esc(rn.n)}</b> · ${rn.p} pace</div></div>
+        <div><h2>Leg ${l.n}${n===36?" · Finish":""}</h2><div class="ded">${vanTxt} · 🏃 <b style="color:var(--text)">${esc(rn.n)}</b> · ${rn.p}/mi</div></div>
         <span class="pill ${l.d}" style="font-size:12px">${({E:"Easy",M:"Moderate",H:"Hard",VH:"Very Hard"})[l.d]}</span>
       </div>
       ${l.major?`<div style="margin-top:8px"><span class="tag" style="background:rgba(255,159,67,.18);color:#ffc98a">⭐ ${esc(l.major)}</span></div>`:""}
@@ -852,15 +852,16 @@ DIFF.forEach(r=>{[r[2],r[3],r[4]].forEach(x=>LEGINFO[x[0]]={van:r[0],runner:r[1]
 const CUM={}; let _c=0;
 LEGS.forEach(l=>{CUM[l.n]=_c;_c+=l.mi;});
 const TOTAL_MI=_c;
-// Our team roster: runner # -> name + pace (min/mile). Van 1 = runners 1–6, Van 2 = 7–12.
+// Our team roster: runner # -> name + pace (min:sec per mile). Van 1 = runners 1–6, Van 2 = 7–12.
 const TEAM={
-  1:{n:"Milliron",p:8.45}, 2:{n:"Barnwell",p:7.45}, 3:{n:"Max / George",p:8.45},
-  4:{n:"Ponce",p:7.45}, 5:{n:"Lopez Lomong",p:6}, 6:{n:"Tim Green",p:9},
-  7:{n:"Palmenberg",p:8}, 8:{n:"Simmonds",p:8.3}, 9:{n:"Levi",p:8.45},
-  10:{n:"Erik Ochoa",p:9}, 11:{n:"Campbell",p:9}, 12:{n:"Kevin McKenna",p:8.45}
+  1:{n:"Milliron",p:"8:45"}, 2:{n:"Barnwell",p:"7:45"}, 3:{n:"Max / George",p:"8:45"},
+  4:{n:"Ponce",p:"7:45"}, 5:{n:"Lopez Lomong",p:"6:00"}, 6:{n:"Tim Green",p:"9:00"},
+  7:{n:"Palmenberg",p:"8:00"}, 8:{n:"Simmonds",p:"8:30"}, 9:{n:"Levi",p:"8:45"},
+  10:{n:"Erik Ochoa",p:"9:00"}, 11:{n:"Campbell",p:"9:00"}, 12:{n:"Kevin McKenna",p:"8:45"}
 };
 const DRIVERS={1:["Sean Ward","Ross Buttermore"], 2:["Anthony (Compo)","Brad Zarin"]};
 function runnerOf(leg){return TEAM[LEGINFO[leg].runner];}
+function paceMin(p){const [m,s]=String(p).split(":").map(Number);return m+(s||0)/60;}  // "8:45" -> 8.75
 
 const SK={start:"htc26_start",factor:"htc26_pacefactor"};
 let clockTimer=null;
@@ -871,7 +872,7 @@ function fmtClock(ms){const d=new Date(ms);let h=d.getHours(),m=d.getMinutes();c
   return h+":"+String(m).padStart(2,"0")+" "+ap;}
 function fmtDur(min){if(min<0)min=0;const h=Math.floor(min/60),m=Math.round(min%60);return h+"h "+String(m).padStart(2,"0")+"m";}
 // each leg is timed by its assigned runner's own pace × the global adjustment factor
-function legDurMin(n){const l=LEGS.find(x=>x.n===n);return l.mi*runnerOf(n).p*factor();}
+function legDurMin(n){const l=LEGS.find(x=>x.n===n);return l.mi*paceMin(runnerOf(n).p)*factor();}
 function legStartMin(n){let t=0;for(let i=1;i<n;i++)t+=legDurMin(i);return t;}
 function legEndMin(n){return legStartMin(n)+legDurMin(n);}
 function totalMin(){return legEndMin(36);}
@@ -950,7 +951,7 @@ function wireClock(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="2.7";
+const APP_VERSION="2.8";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
