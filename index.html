@@ -89,6 +89,8 @@ h2.sec:first-child{margin-top:4px}
   text-transform:uppercase;color:#0b1220}
 .pill.E{background:var(--e)} .pill.M{background:var(--m)} .pill.H{background:var(--h)} .pill.VH{background:var(--vh);color:#fff}
 .chev{color:var(--muted2);font-size:20px}
+.leg-item.leg-now{border-color:rgba(77,163,255,.55);background:rgba(77,163,255,.1)}
+.now-tag{font-size:9.5px;font-weight:800;letter-spacing:.5px;background:var(--accent);color:#06131f;padding:2px 6px;border-radius:5px}
 
 /* Detail */
 .detail-head{background:linear-gradient(135deg,var(--card2),var(--card));border-radius:var(--radius);
@@ -535,6 +537,7 @@ function setTab(t){
 function renderLegs(){
   const q=curSearch.trim().toLowerCase();
   const list=$("#legList"); list.innerHTML="";
+  const st=startMs(), nowEl=st?(Date.now()-st)/60000:null;
   const items=LEGS.filter(l=>{
     if(curVan!=="all" && l.van!==0 && String(l.van)!==curVan) return false;
     if(curVan!=="all" && l.van===0){ /* major exchanges shown in both */ }
@@ -546,11 +549,17 @@ function renderLegs(){
   items.forEach(l=>{
     const vanTxt=l.van===0?"1&2":l.van;
     const rn=TEAM[LEGINFO[l.n].runner];
-    const el=document.createElement("div");el.className="leg-item";
+    let timeStr="", isNow=false;
+    if(st){
+      const s0=legStartMin(l.n), e0=legEndMin(l.n);
+      isNow=nowEl>=s0 && nowEl<e0;
+      timeStr=`🕐 ${fmtClock(st+s0*60000)} · `;
+    }
+    const el=document.createElement("div");el.className="leg-item"+(isNow?" leg-now":"");
     el.innerHTML=`<div class="leg-num">${l.n}<span class="van ${l.van===2?'v2':''}">V${vanTxt}</span></div>
       <div class="leg-body">
-        <div class="leg-title">Leg ${l.n} · ${esc(rn.n)} <span class="pill ${l.d}">${l.d}</span></div>
-        <div class="leg-meta">${l.mi} mi · ${esc(l.exch.split("—")[0].trim())}${l.major?' · ⭐ '+esc(l.major.split('·')[0].trim()):''}</div>
+        <div class="leg-title">Leg ${l.n} · ${esc(rn.n)} <span class="pill ${l.d}">${l.d}</span>${isNow?' <span class="now-tag">NOW</span>':''}</div>
+        <div class="leg-meta">${timeStr}${l.mi} mi · ${esc(l.exch.split("—")[0].trim())}${l.major?' · ⭐ '+esc(l.major.split('·')[0].trim()):''}</div>
       </div><div class="chev">›</div>`;
     el.onclick=()=>openLeg(l.n);
     list.appendChild(el);
@@ -583,6 +592,7 @@ function openLeg(n){
       </div>
     </div>
     <a class="gps-btn" href="${mapsUrl}">📍 Open Exchange in Apple Maps</a>
+    ${startMs()?`<div class="addr" style="margin:-4px 4px 10px;color:var(--accent);font-weight:700">🕐 Projected: ${fmtClock(startMs()+legStartMin(n)*60000)} → ${fmtClock(startMs()+legEndMin(n)*60000)}</div>`:""}
     <div class="addr" style="margin:-4px 4px 12px">${esc(l.exch)}<br>GPS ${l.lat}, ${l.lng}</div>
     ${alerts}
     <div class="card">
@@ -960,7 +970,7 @@ function wireClock(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="2.9";
+const APP_VERSION="3.0";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
