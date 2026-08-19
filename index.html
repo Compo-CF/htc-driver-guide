@@ -868,6 +868,8 @@ let clockTimer=null;
 const clampF=v=>Math.max(0.8,Math.min(1.2,v));
 function factor(){return clampF(parseFloat(localStorage.getItem(SK.factor))||1);}
 function startMs(){const s=localStorage.getItem(SK.start);return s?new Date(s).getTime():null;}
+function defaultStart(){const d=new Date();d.setHours(7,40,0,0);const p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T07:40`;}  // designated team start 7:40 AM
 function fmtClock(ms){const d=new Date(ms);let h=d.getHours(),m=d.getMinutes();const ap=h<12?"AM":"PM";h=h%12||12;
   return h+":"+String(m).padStart(2,"0")+" "+ap;}
 function fmtDur(min){if(min<0)min=0;const h=Math.floor(min/60),m=Math.round(min%60);return h+"h "+String(m).padStart(2,"0")+"m";}
@@ -882,9 +884,11 @@ function clockSetup(){
     <div class="card">
       <h3>Your team's race plan</h3>
       <div class="field"><label>Start date & time (at Timberline)</label>
-        <input type="datetime-local" id="startIn" value="${localStorage.getItem(SK.start)||""}"></div>
-      <p class="muted small" style="margin:2px 2px 12px">Projected finish: <b>${fmtDur(totalMin())}</b> after your start — each leg timed by its runner's own pace.</p>
+        <input type="datetime-local" id="startIn" value="${localStorage.getItem(SK.start)||defaultStart()}"></div>
+      <p class="muted small" style="margin:2px 2px 10px">Designated team start: <b>7:40 AM</b> (pre-filled) — change the date if you're testing.</p>
       <button class="btn-primary" id="saveClock">Save & start the clock</button>
+      <button class="reset" id="use740" style="width:100%;margin-top:8px">Set to 7:40 AM today</button>
+      <p class="muted small" style="margin:10px 2px 0">Projected finish: <b>${fmtDur(totalMin())}</b> after your start — each leg timed by its runner's own pace.</p>
     </div>`;
 }
 function renderClock(){
@@ -932,15 +936,20 @@ function renderClock(){
     <div class="tbl-wrap"><table class="sched">
       <thead><tr><th>Van</th><th>Leg · Runner</th><th>Mi</th><th>Start</th><th>Exch by</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
-    <button class="reset" id="editClock" style="margin-top:12px">⚙ Change start time</button>`;
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="reset" id="editClock" style="flex:1;margin:0">⚙ Change start time</button>
+      <button class="reset" id="resetClock" style="flex:1;margin:0">↺ Reset clock</button>
+    </div>`;
   const bump=d=>{localStorage.setItem(SK.factor,clampF(factor()+d).toFixed(2));renderClock();};
   $("#pDown").onclick=()=>bump(-0.05); $("#pUp").onclick=()=>bump(0.05);
   $("#editClock").onclick=()=>{views.clock.innerHTML=clockSetup();wireClock();};
+  $("#resetClock").onclick=()=>{localStorage.removeItem(SK.start);localStorage.removeItem(SK.factor);renderClock();};
   clearInterval(clockTimer);
   clockTimer=setInterval(()=>{const el=$("#liveNow");if(el&&curTab==="clock"){el.textContent=fmtClock(Date.now());}else{clearInterval(clockTimer);}},1000);
 }
 function wireClock(){
   const sv=$("#saveClock");if(!sv)return;
+  const u=$("#use740"); if(u)u.onclick=()=>{const el=$("#startIn");if(el)el.value=defaultStart();};
   sv.onclick=()=>{
     const s=$("#startIn").value;
     if(!s){$("#startIn").focus();return;}
@@ -951,7 +960,7 @@ function wireClock(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="2.8";
+const APP_VERSION="2.9";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
