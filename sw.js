@@ -1,5 +1,5 @@
 /* HTC 2026 Driver Guide — offline service worker */
-const CACHE = 'htc26-v13';
+const CACHE = 'htc26-v15';
 const LEGMAPS = Array.from({ length: 36 }, (_, i) => `./legmaps/leg-${i + 1}.jpg`);
 const ASSETS = [
   './',
@@ -7,6 +7,7 @@ const ASSETS = [
   './manifest.json',
   './logo.svg',
   './seaside-parking.png',
+  './hotel-map.jpg',
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png',

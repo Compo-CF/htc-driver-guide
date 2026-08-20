@@ -208,6 +208,10 @@ img.mapimg{cursor:zoom-in}
   font-size:12px;pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,.8)}
 /* home */
 header.clickable{cursor:pointer}
+.home-btn-top{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:0;font-size:14px;font-weight:800;padding:10px 15px;border-radius:12px;cursor:pointer;flex-shrink:0}
+.home-btn-top svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.home-btn-top:active{opacity:.85}
 .home-hero{background:linear-gradient(135deg,#12305a,#1a1233);border:1px solid rgba(77,163,255,.2);
   border-radius:var(--radius);padding:20px 18px;margin-bottom:14px}
 .home-hero .hh-title{font-size:22px;font-weight:800}
@@ -230,12 +234,14 @@ header.clickable{cursor:pointer}
 </style>
 </head>
 <body>
-<header id="appHeader" class="clickable">
+<header id="appHeader">
   <div class="h-row">
-    <div>
+    <div style="min-width:0">
       <div class="h-title"><span class="badge">HTC 26</span><span id="h-title-txt">Team Last Milers</span></div>
-      <div class="h-sub" id="h-sub"><svg class="home-ic" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg>Tap to return home</div>
+      <div class="h-sub" id="h-sub">2026 Hood To Coast</div>
     </div>
+    <button id="homeBtn" class="home-btn-top" aria-label="Home">
+      <svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg>Home</button>
   </div>
 </header>
 
@@ -540,6 +546,7 @@ function setTab(t){
   views[t].classList.remove("hidden");
   $$("#tabbar button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
   $("#h-title-txt").textContent=titles[t]||"Team Last Milers";
+  const hb=$("#homeBtn"); if(hb)hb.style.display=(t==="home")?"none":"flex";
   window.scrollTo(0,0);
 }
 
@@ -1043,12 +1050,33 @@ async function loadWeather(){
 }
 
 /* ---- Hotel ---- */
+const HOTEL={
+  name:"Sheraton Portland Airport Hotel",
+  addr:"8235 NE Airport Way, Portland, OR 97220",
+  lat:45.5831560, lng:-122.5752444,
+  phone:"+15032812500", phoneDisp:"(503) 281-2500",
+  site:"https://www.marriott.com/en-us/hotels/pdxsi-sheraton-portland-airport-hotel/overview/"
+};
 function renderHotel(){
-  views.hotel.innerHTML=`<div class="note-box">🏨 Team hotel details are being added — they’ll appear here after the next app update.</div>`;
+  const maps=`https://maps.apple.com/?ll=${HOTEL.lat},${HOTEL.lng}&q=${encodeURIComponent(HOTEL.name)}`;
+  views.hotel.innerHTML=`
+   <div class="detail-head"><h2 style="margin:0;font-size:20px">🏨 ${esc(HOTEL.name)}</h2>
+     <div class="ded" style="margin-top:4px">${esc(HOTEL.addr)}</div></div>
+   <a class="gps-btn" href="${maps}">📍 Open in Maps</a>
+   <img class="legmap" src="./hotel-map.jpg" alt="Hotel map" loading="lazy" onclick="openLightbox('./hotel-map.jpg','${esc(HOTEL.name)}')" style="margin-bottom:12px">
+   <div class="card">
+     <div class="kv"><div class="k">Address</div><div class="v">${esc(HOTEL.addr)}</div></div>
+     <div class="kv"><div class="k">Phone</div><div class="v"><a href="tel:${HOTEL.phone}">${HOTEL.phoneDisp}</a></div></div>
+     <div class="kv"><div class="k">Location</div><div class="v">At Portland International Airport (PDX), off NE Airport Way.</div></div>
+     <div class="kv"><div class="k">Check-in</div><div class="v">3:00 PM (standard)</div></div>
+     <div class="kv"><div class="k">Check-out</div><div class="v">12:00 PM / noon (standard)</div></div>
+     <div class="kv"><div class="k">Website</div><div class="v"><a href="${HOTEL.site}">marriott.com</a></div></div>
+   </div>
+   <p class="muted small" style="text-align:center;margin-top:4px">Tap the map to enlarge · map © OpenStreetMap</p>`;
 }
 
 /* ---- Home ---- */
-const APP_VERSION="3.1";
+const APP_VERSION="3.3";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -1148,7 +1176,7 @@ $$("#vanSeg button").forEach(b=>b.onclick=()=>{
   curVan=b.dataset.van;renderLegs();
 });
 
-$("#appHeader").onclick=goHome;
+$("#homeBtn").onclick=goHome;
 
 /* ---- Image lightbox (offline pinch/pan zoom) ---- */
 (function(){
@@ -1218,8 +1246,7 @@ $("#appHeader").onclick=goHome;
   stage.addEventListener("wheel",e=>{e.preventDefault();zoomAround(e.clientX,e.clientY,clamp(scale*(e.deltaY<0?1.15:0.87),1,6));if(scale<=1.02)reset();},{passive:false});
 })();
 
-renderLegs();
-renderHome();   // land on Home
+setTab("home");   // land on Home
 
 /* ---- Service worker (offline + auto-update) ---- */
 if('serviceWorker' in navigator){
