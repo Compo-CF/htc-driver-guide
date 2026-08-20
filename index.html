@@ -200,6 +200,16 @@ tr.doner td{color:var(--muted2)}
 img.mapimg{width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.1);display:block;background:#fff}
 img.legmap{width:100%;display:block;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#fff;cursor:zoom-in}
 img.mapimg{cursor:zoom-in}
+/* weather hourly */
+.wx-hours{border-top:1px solid rgba(255,255,255,.08);max-height:360px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.wx-day{position:sticky;top:0;background:var(--card2);color:var(--muted);font-size:11px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.5px;padding:6px 16px;z-index:1}
+.wx-hr{display:grid;grid-template-columns:42px 24px 1fr 46px 60px;align-items:center;gap:6px;padding:7px 16px;
+  font-size:13px;border-bottom:1px solid rgba(255,255,255,.045)}
+.wx-hr .wx-t{color:var(--muted);font-variant-numeric:tabular-nums}
+.wx-hr .wx-temp{font-weight:700}
+.wx-hr .wx-pop{color:var(--accent);font-size:12px;text-align:right}
+.wx-hr .wx-wind{color:var(--muted2);font-size:12px;text-align:right;white-space:nowrap}
 /* lightbox */
 .lb{position:fixed;inset:0;z-index:100;background:rgba(6,10,18,.97);touch-action:none;overscroll-behavior:contain}
 .lb-stage{position:absolute;inset:0;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none}
@@ -1012,20 +1022,37 @@ function wxCode(c){
     95:["⛈️","Thunderstorm"],96:["⛈️","Storm w/ hail"],99:["⛈️","Severe storm"]};
   return m[c]||["🌡️","—"];
 }
+function wxHourly(d){
+  if(!d.hourly||!d.hourly.length) return '<div class="muted small" style="padding:10px 16px">No hourly data — refresh with signal.</div>';
+  let html="", curDay="";
+  d.hourly.forEach(h=>{
+    const dt=h.t.split("T")[0], tm=h.t.split("T")[1]; const p=dt.split("-").map(Number);
+    const dayName=new Date(p[0],p[1]-1,p[2]).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+    if(dayName!==curDay){curDay=dayName; html+=`<div class="wx-day">${dayName}</div>`;}
+    const hh=+tm.slice(0,2), ap=hh<12?"a":"p", h12=hh%12||12, ic=wxCode(h.code);
+    const pop=(h.pop!=null&&h.pop>0)?`<span class="wx-pop">${h.pop}%</span>`:"<span></span>";
+    html+=`<div class="wx-hr"><span class="wx-t">${h12}${ap}</span><span>${ic[0]}</span><span class="wx-temp">${h.temp}°</span>${pop}<span class="wx-wind">${h.wind} mph</span></div>`;
+  });
+  return html;
+}
+function wxToggle(i){const el=$("#wxh-"+i), a=$("#wxa-"+i);if(el){el.classList.toggle("hidden");if(a)a.textContent=el.classList.contains("hidden")?"▾":"▴";}}
 function wxLayout(payload,status){
   let cards="";
   if(payload&&payload.data){
-    cards=payload.data.map(d=>{const ic=wxCode(d.code);
-      return `<div class="card" style="display:flex;align-items:center;gap:14px;padding:14px 16px">
-        <div style="font-size:34px;line-height:1">${ic[0]}</div>
-        <div style="flex:1;min-width:0"><div style="font-weight:800;font-size:15px">${esc(d.name)}</div>
-          <div class="muted small">${ic[1]} · ${d.wind} mph wind</div></div>
-        <div style="text-align:right"><div style="font-size:22px;font-weight:800">${d.temp}°</div>
-          <div class="muted small">H ${d.hi}° · L ${d.lo}°</div></div></div>`;
+    cards=payload.data.map((d,i)=>{const ic=wxCode(d.code); const has=d.hourly&&d.hourly.length;
+      return `<div class="card wx-card" style="padding:0;overflow:hidden">
+        <div class="wx-head" ${has?`onclick="wxToggle(${i})"`:""} style="display:flex;align-items:center;gap:14px;padding:14px 16px;${has?'cursor:pointer':''}">
+          <div style="font-size:34px;line-height:1">${ic[0]}</div>
+          <div style="flex:1;min-width:0"><div style="font-weight:800;font-size:15px">${esc(d.name)}</div>
+            <div class="muted small">${ic[1]} · ${d.wind} mph${has?` · 48-hr <span id="wxa-${i}">▾</span>`:""}</div></div>
+          <div style="text-align:right"><div style="font-size:22px;font-weight:800">${d.temp}°</div>
+            <div class="muted small">H ${d.hi}° · L ${d.lo}°</div></div></div>
+        ${has?`<div class="wx-hours hidden" id="wxh-${i}">${wxHourly(d)}</div>`:""}
+      </div>`;
     }).join("");
   }
   const when=payload&&payload.ts?"Updated "+fmtClock(payload.ts):"";
-  return `<div class="note-box">Live forecast for key points along the course. Refreshes when you have signal; otherwise shows the last saved.</div>
+  return `<div class="note-box">Live forecast for key points along the course. Tap a location for its 48-hour hourly forecast. Refreshes when you have signal; otherwise shows the last saved.</div>
     <div style="display:flex;align-items:center;gap:10px;margin:0 4px 12px">
       <div class="muted small" style="flex:1">${status||when}</div>
       <button class="reset" id="wxRefresh" style="margin:0">↻ Refresh</button>
@@ -1043,11 +1070,22 @@ function renderWeather(){
 async function loadWeather(){
   try{
     const lat=WX.map(p=>p.la).join(","), lon=WX.map(p=>p.lo).join(",");
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FLos_Angeles&forecast_days=1`;
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FLos_Angeles&forecast_days=3`;
     const res=await fetch(url,{cache:"no-store"}); const j=await res.json();
     const arr=Array.isArray(j)?j:[j];
-    const data=arr.map((loc,i)=>({name:WX[i].n,temp:Math.round(loc.current.temperature_2m),code:loc.current.weather_code,
-      wind:Math.round(loc.current.wind_speed_10m),hi:Math.round(loc.daily.temperature_2m_max[0]),lo:Math.round(loc.daily.temperature_2m_min[0])}));
+    const now=Date.now();
+    const data=arr.map((loc,i)=>{
+      const hourly=[]; const H=loc.hourly;
+      if(H&&H.time){
+        let i0=H.time.findIndex(t=>new Date(t).getTime()>=now); if(i0<0)i0=0;
+        for(let k=i0;k<Math.min(H.time.length,i0+48);k++){
+          hourly.push({t:H.time[k],temp:Math.round(H.temperature_2m[k]),code:H.weather_code[k],
+            pop:(H.precipitation_probability?H.precipitation_probability[k]:null),wind:Math.round(H.wind_speed_10m[k])});
+        }
+      }
+      return {name:WX[i].n,temp:Math.round(loc.current.temperature_2m),code:loc.current.weather_code,
+        wind:Math.round(loc.current.wind_speed_10m),hi:Math.round(loc.daily.temperature_2m_max[0]),lo:Math.round(loc.daily.temperature_2m_min[0]),hourly};
+    });
     const payload={ts:Date.now(),data};
     localStorage.setItem("htc26_wx",JSON.stringify(payload));
     if(curTab==="weather"){views.weather.innerHTML=wxLayout(payload,"");wireWx();}
@@ -1117,7 +1155,7 @@ function renderHotel(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="3.6";
+const APP_VERSION="3.7";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
