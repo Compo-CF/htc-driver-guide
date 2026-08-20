@@ -181,6 +181,8 @@ nav button.active{color:var(--accent)}
   border:1px solid rgba(255,255,255,.12);color:var(--text);border-radius:11px;padding:12px 13px;
   font-size:16px;outline:none;box-sizing:border-box;-webkit-appearance:none;appearance:none}
 .field input[type=datetime-local]{-webkit-appearance:none;appearance:none;min-height:48px}
+.fuelsel{width:100%;max-width:100%;background:var(--bg2);border:1px solid rgba(255,255,255,.12);color:var(--text);
+  border-radius:11px;padding:12px 13px;font-size:16px;-webkit-appearance:none;appearance:none;box-sizing:border-box}
 .pace-row{display:flex;gap:8px;align-items:center}
 .pace-row input{flex:1 1 auto;min-width:0}
 .pace-row .muted{flex:0 0 auto;white-space:nowrap}
@@ -286,6 +288,9 @@ header.clickable{cursor:pointer}
 
   <!-- HOTEL -->
   <section class="view hidden" id="view-hotel"></section>
+
+  <!-- FUEL -->
+  <section class="view hidden" id="view-fuel"></section>
 
   <!-- PREP -->
   <section class="view hidden" id="view-prep"></section>
@@ -532,15 +537,15 @@ const GEAR = ["Two (2) reflective vests","Two (2) LED flashers","Two flashlights
 
 /* ============================ APP ============================ */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const views={home:$("#view-home"),legs:$("#view-legs"),detail:$("#view-detail"),clock:$("#view-clock"),course:$("#view-course"),rules:$("#view-rules"),safety:$("#view-safety"),prep:$("#view-prep"),vans:$("#view-vans"),weather:$("#view-weather"),hotel:$("#view-hotel")};
-const titles={home:"Team Last Milers",legs:"Team Last Milers",clock:"Race Clock",course:"Course",rules:"Race Rules",safety:"Safety",prep:"Prep & Checklists",vans:"Vans",weather:"Weather",hotel:"Hotel"};
+const views={home:$("#view-home"),legs:$("#view-legs"),detail:$("#view-detail"),clock:$("#view-clock"),course:$("#view-course"),rules:$("#view-rules"),safety:$("#view-safety"),prep:$("#view-prep"),vans:$("#view-vans"),weather:$("#view-weather"),hotel:$("#view-hotel"),fuel:$("#view-fuel")};
+const titles={home:"Team Last Milers",legs:"Team Last Milers",clock:"Race Clock",course:"Course",rules:"Race Rules",safety:"Safety",prep:"Prep & Checklists",vans:"Vans",weather:"Weather",hotel:"Hotel",fuel:"Fuel Stops"};
 let curTab="legs", curVan="all", curSearch="";
 
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function setTab(t){
   curTab=t;
   const r={home:renderHome,legs:renderLegs,clock:renderClock,course:renderCourse,rules:renderRules,
-    safety:renderSafety,prep:renderPrep,vans:renderVans,weather:renderWeather,hotel:renderHotel}[t];
+    safety:renderSafety,prep:renderPrep,vans:renderVans,weather:renderWeather,hotel:renderHotel,fuel:renderFuel}[t];
   if(r)r();
   Object.values(views).forEach(v=>v.classList.add("hidden"));
   views[t].classList.remove("hidden");
@@ -1049,6 +1054,39 @@ async function loadWeather(){
   }
 }
 
+/* ---- Fuel ---- */
+const FUEL_POINTS=[{n:"Start · Timberline",lat:45.3312,lng:-121.7111}]
+  .concat(LEGS.map(l=>({n:(l.n===36?"Finish · Seaside":"Exch "+l.n),lat:l.lat,lng:l.lng})));
+const FUEL_GUIDE=[
+  {where:"Sandy · Exch 6 area",note:"Multiple gas stations in Sandy along HWY 26.",lat:45.4057,lng:-122.2769},
+  {where:"Boring · HWY 212 (Exch 8)",note:"Stations on HWY 212.",lat:45.4322,lng:-122.3754},
+  {where:"Gresham · Exch 9",note:"Stations in downtown Gresham.",lat:45.4954,lng:-122.4317},
+  {where:"Scappoose · Exch 16",note:"Fuel available in town.",lat:45.7492,lng:-122.8744},
+  {where:"⛽ St. Helens · Exch 17 — LAST FUEL",note:"FUEL UP HERE. Stations on HWY 30 in St. Helens. No fuel again until Astoria — top off before you leave.",lat:45.8192,lng:-122.8508},
+  {where:"Olney Store · near Exch 31",note:"Fuel at the Olney Store, HWY 202 / Youngs River Rd (~9.5-mile marker).",lat:46.0977,lng:-123.7494},
+  {where:"Astoria · after Leg 30",note:"Stations ~13 miles into Astoria on HWY 202.",lat:46.1879,lng:-123.8313},
+  {where:"Seaside · Finish",note:"Fuel available in Seaside.",lat:45.9938,lng:-123.9301}
+];
+function gmapsGas(lat,lng){return `https://www.google.com/maps/search/gas+station/@${lat},${lng},13z`;}
+function renderFuel(){
+  const opts=FUEL_POINTS.map((p,i)=>`<option value="${i}">${esc(p.n)}</option>`).join("");
+  views.fuel.innerHTML=`
+   <div class="note-box">⛽ The search buttons open your Maps app to the nearest gas (needs signal). The <b>course fuel guide</b> below works offline — it tells you where fuel actually is on the route.</div>
+   <a class="gps-btn" href="https://www.google.com/maps/search/gas+station" target="_blank" rel="noopener">⛽ Find gas near me now</a>
+   <div class="card">
+     <h3>Gas near a point on the course</h3>
+     <div class="field"><label>Pick a start / exchange / finish</label>
+       <select id="fuelExch" class="fuelsel">${opts}</select></div>
+     <a class="btn-primary" id="fuelGo" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener">Find gas near this point</a>
+   </div>
+   <h2 class="sec">Course fuel guide (offline)</h2>
+   <div class="note-box danger"><b>⛽ FUEL UP in St. Helens (before Leg 18)</b><br>It's the last reliable gas before the coast. There is NO fuel from Exchange 18 through Astoria (Legs 19–30). Top off before you leave St. Helens.</div>
+   ${FUEL_GUIDE.map(g=>`<div class="card"><h3 style="margin-bottom:4px">${esc(g.where)}</h3><p style="margin:4px 0">${esc(g.note)}</p><a href="${gmapsGas(g.lat,g.lng)}" target="_blank" rel="noopener" style="font-size:13px;font-weight:700">Search gas here ›</a></div>`).join("")}`;
+  const sel=$("#fuelExch"), go=$("#fuelGo");
+  const upd=()=>{const p=FUEL_POINTS[+sel.value];go.href=gmapsGas(p.lat,p.lng);};
+  sel.onchange=upd; upd();
+}
+
 /* ---- Hotel ---- */
 const HOTEL={
   name:"Sheraton Portland Airport Hotel",
@@ -1076,7 +1114,7 @@ function renderHotel(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="3.3";
+const APP_VERSION="3.4";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -1086,7 +1124,8 @@ const ICON={
   prep:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
   vans:'<path d="M3 6h10v9H3z"/><path d="M13 9h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17" cy="17.5" r="1.6"/>',
   weather:'<circle cx="12" cy="12" r="3.6"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/>',
-  hotel:'<path d="M3 21h18M5 21V6l7-3 7 3v15"/><path d="M9 9h.01M12 9h.01M15 9h.01M9 13h.01M12 13h.01M15 13h.01M10 21v-4h4v4"/>'
+  hotel:'<path d="M3 21h18M5 21V6l7-3 7 3v15"/><path d="M9 9h.01M12 9h.01M15 9h.01M9 13h.01M12 13h.01M15 13h.01M10 21v-4h4v4"/>',
+  fuel:'<path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M4 10h8"/><path d="M14 8l3 3v7a2 2 0 0 0 2 2 2 2 0 0 0 2-2v-9l-3-3"/>'
 };
 function goHome(){setTab('home');}
 function renderHome(){
@@ -1118,6 +1157,7 @@ function renderHome(){
      ${btn('clock','Race Clock','Who’s running now')}
      ${btn('vans','Vans','Who’s in each van')}
      ${btn('weather','Weather','Course forecast')}
+     ${btn('fuel','Fuel Stops','Find gas near you')}
      ${btn('hotel','Hotel','Address & map')}
      ${btn('prep','Prep','Checklists & logistics')}
    </div>
