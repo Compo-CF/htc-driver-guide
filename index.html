@@ -272,6 +272,15 @@ header.clickable{cursor:pointer}
   <!-- SAFETY -->
   <section class="view hidden" id="view-safety"></section>
 
+  <!-- VANS -->
+  <section class="view hidden" id="view-vans"></section>
+
+  <!-- WEATHER -->
+  <section class="view hidden" id="view-weather"></section>
+
+  <!-- HOTEL -->
+  <section class="view hidden" id="view-hotel"></section>
+
   <!-- PREP -->
   <section class="view hidden" id="view-prep"></section>
 </main>
@@ -517,19 +526,20 @@ const GEAR = ["Two (2) reflective vests","Two (2) LED flashers","Two flashlights
 
 /* ============================ APP ============================ */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const views={home:$("#view-home"),legs:$("#view-legs"),detail:$("#view-detail"),clock:$("#view-clock"),course:$("#view-course"),rules:$("#view-rules"),safety:$("#view-safety"),prep:$("#view-prep")};
-const titles={home:"Team Last Milers",legs:"Team Last Milers",clock:"Race Clock",course:"Course",rules:"Race Rules",safety:"Safety",prep:"Prep & Checklists"};
+const views={home:$("#view-home"),legs:$("#view-legs"),detail:$("#view-detail"),clock:$("#view-clock"),course:$("#view-course"),rules:$("#view-rules"),safety:$("#view-safety"),prep:$("#view-prep"),vans:$("#view-vans"),weather:$("#view-weather"),hotel:$("#view-hotel")};
+const titles={home:"Team Last Milers",legs:"Team Last Milers",clock:"Race Clock",course:"Course",rules:"Race Rules",safety:"Safety",prep:"Prep & Checklists",vans:"Vans",weather:"Weather",hotel:"Hotel"};
 let curTab="legs", curVan="all", curSearch="";
 
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function setTab(t){
   curTab=t;
-  Object.entries(views).forEach(([k,v])=>v.classList.toggle("hidden",k!==t && !(t==="legs"&&k==="detail"&&!views.detail.classList.contains("hidden"))));
-  // simple: hide all, show target
+  const r={home:renderHome,legs:renderLegs,clock:renderClock,course:renderCourse,rules:renderRules,
+    safety:renderSafety,prep:renderPrep,vans:renderVans,weather:renderWeather,hotel:renderHotel}[t];
+  if(r)r();
   Object.values(views).forEach(v=>v.classList.add("hidden"));
-  if(t==="legs"){views.legs.classList.remove("hidden")}else{views[t].classList.remove("hidden")}
+  views[t].classList.remove("hidden");
   $$("#tabbar button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
-  $("#h-title-txt").textContent=titles[t];
+  $("#h-title-txt").textContent=titles[t]||"Team Last Milers";
   window.scrollTo(0,0);
 }
 
@@ -782,18 +792,6 @@ function renderPrep(){
    ${packHtml}
    <button class="reset" id="resetChk">↺ Reset all checkboxes</button>
 
-   <h2 class="sec">Our roster · Van 1</h2>
-   <div class="card">
-     <div class="tbl-wrap">${rosterTable(1)}</div>
-     <p class="muted small" style="margin-bottom:0"><b>🚐 Drivers:</b> ${DRIVERS[1].join(" · ")}</p>
-   </div>
-   <h2 class="sec">Our roster · Van 2</h2>
-   <div class="card">
-     <div class="tbl-wrap">${rosterTable(2)}</div>
-     <p class="muted small" style="margin-bottom:0"><b>🚐 Drivers:</b> ${DRIVERS[2].join(" · ")}</p>
-   </div>
-   <p class="muted small" style="margin:0 4px 6px">Each runner runs 3 legs in rotation. Vans swap only at major exchanges (6, 12, 18, 24, 30). Paces feed the Race Clock.</p>
-
    <h2 class="sec">Start line · Timberline</h2>
    <div class="card">
      <p><b>Location:</b> Lower lot of Timberline Lodge, 27500 E Timberline Rd, Government Camp, OR 97028.</p>
@@ -969,23 +967,100 @@ function wireClock(){
   };
 }
 
+/* ---- Vans ---- */
+function renderVans(){
+  const vc=v=>{
+    const legs=v===1?"1–6, 13–18, 25–30":"7–12, 19–24, 31–36";
+    return `<h2 class="sec">Van ${v}</h2><div class="card">
+      <p class="muted small" style="margin-top:0">Runs legs <b>${legs}</b></p>
+      <div class="tbl-wrap">${rosterTable(v)}</div>
+      <p class="muted small" style="margin-bottom:0"><b>🚐 Drivers:</b> ${esc(DRIVERS[v].join(" · "))}</p></div>`;
+  };
+  views.vans.innerHTML=`<div class="note-box">Two vans leapfrog the course, swapping runners at the major exchanges (6, 12, 18, 24, 30). The Van 2 sign is required to access legs 19–23 &amp; 32–36.</div>`+vc(1)+vc(2);
+}
+
+/* ---- Weather (live when online, last-saved when not) ---- */
+const WX=[
+  {n:"Start · Mt. Hood",la:45.3048,lo:-121.7592},
+  {n:"Sandy · Exch 6",la:45.4057,lo:-122.2769},
+  {n:"Portland · Exch 12",la:45.5067,lo:-122.6643},
+  {n:"St. Helens · Exch 18",la:45.8506,lo:-122.8723},
+  {n:"Astoria · Exch 30",la:46.0658,lo:-123.6927},
+  {n:"Finish · Seaside",la:45.9938,lo:-123.9301}
+];
+function wxCode(c){
+  const m={0:["☀️","Clear"],1:["🌤️","Mainly clear"],2:["⛅","Partly cloudy"],3:["☁️","Overcast"],
+    45:["🌫️","Fog"],48:["🌫️","Rime fog"],51:["🌦️","Light drizzle"],53:["🌦️","Drizzle"],55:["🌧️","Heavy drizzle"],
+    61:["🌦️","Light rain"],63:["🌧️","Rain"],65:["🌧️","Heavy rain"],66:["🌧️","Freezing rain"],67:["🌧️","Freezing rain"],
+    71:["🌨️","Light snow"],73:["🌨️","Snow"],75:["❄️","Heavy snow"],77:["🌨️","Snow grains"],
+    80:["🌦️","Showers"],81:["🌧️","Showers"],82:["⛈️","Heavy showers"],85:["🌨️","Snow showers"],86:["❄️","Snow showers"],
+    95:["⛈️","Thunderstorm"],96:["⛈️","Storm w/ hail"],99:["⛈️","Severe storm"]};
+  return m[c]||["🌡️","—"];
+}
+function wxLayout(payload,status){
+  let cards="";
+  if(payload&&payload.data){
+    cards=payload.data.map(d=>{const ic=wxCode(d.code);
+      return `<div class="card" style="display:flex;align-items:center;gap:14px;padding:14px 16px">
+        <div style="font-size:34px;line-height:1">${ic[0]}</div>
+        <div style="flex:1;min-width:0"><div style="font-weight:800;font-size:15px">${esc(d.name)}</div>
+          <div class="muted small">${ic[1]} · ${d.wind} mph wind</div></div>
+        <div style="text-align:right"><div style="font-size:22px;font-weight:800">${d.temp}°</div>
+          <div class="muted small">H ${d.hi}° · L ${d.lo}°</div></div></div>`;
+    }).join("");
+  }
+  const when=payload&&payload.ts?"Updated "+fmtClock(payload.ts):"";
+  return `<div class="note-box">Live forecast for key points along the course. Refreshes when you have signal; otherwise shows the last saved.</div>
+    <div style="display:flex;align-items:center;gap:10px;margin:0 4px 12px">
+      <div class="muted small" style="flex:1">${status||when}</div>
+      <button class="reset" id="wxRefresh" style="margin:0">↻ Refresh</button>
+    </div>
+    ${cards||'<div class="card"><p class="muted" style="margin:0">No saved forecast yet. Connect to Wi-Fi/data and tap Refresh.</p></div>'}
+    <p class="muted small" style="text-align:center;margin-top:10px">Weather by Open-Meteo</p>`;
+}
+function wireWx(){const rf=$("#wxRefresh");if(rf)rf.onclick=()=>{if(navigator.onLine)loadWeather();else{const c=JSON.parse(localStorage.getItem("htc26_wx")||"null");views.weather.innerHTML=wxLayout(c,"No signal — still offline");wireWx();}};}
+function renderWeather(){
+  const cached=JSON.parse(localStorage.getItem("htc26_wx")||"null");
+  views.weather.innerHTML=wxLayout(cached, navigator.onLine?"Updating…":(cached?"Offline — last saved shown":"Offline — no saved forecast"));
+  wireWx();
+  if(navigator.onLine) loadWeather();
+}
+async function loadWeather(){
+  try{
+    const lat=WX.map(p=>p.la).join(","), lon=WX.map(p=>p.lo).join(",");
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FLos_Angeles&forecast_days=1`;
+    const res=await fetch(url,{cache:"no-store"}); const j=await res.json();
+    const arr=Array.isArray(j)?j:[j];
+    const data=arr.map((loc,i)=>({name:WX[i].n,temp:Math.round(loc.current.temperature_2m),code:loc.current.weather_code,
+      wind:Math.round(loc.current.wind_speed_10m),hi:Math.round(loc.daily.temperature_2m_max[0]),lo:Math.round(loc.daily.temperature_2m_min[0])}));
+    const payload={ts:Date.now(),data};
+    localStorage.setItem("htc26_wx",JSON.stringify(payload));
+    if(curTab==="weather"){views.weather.innerHTML=wxLayout(payload,"");wireWx();}
+  }catch(e){
+    if(curTab==="weather"){const c=JSON.parse(localStorage.getItem("htc26_wx")||"null");
+      views.weather.innerHTML=wxLayout(c,c?"Couldn’t refresh — showing last saved":"Couldn’t load — check signal");wireWx();}
+  }
+}
+
+/* ---- Hotel ---- */
+function renderHotel(){
+  views.hotel.innerHTML=`<div class="note-box">🏨 Team hotel details are being added — they’ll appear here after the next app update.</div>`;
+}
+
 /* ---- Home ---- */
-const APP_VERSION="3.0";
+const APP_VERSION="3.1";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   course:'<path d="M3 6h18M3 12h18M3 18h18"/>',
   rules:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/>',
   safety:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
-  prep:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'
+  prep:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  vans:'<path d="M3 6h10v9H3z"/><path d="M13 9h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17" cy="17.5" r="1.6"/>',
+  weather:'<circle cx="12" cy="12" r="3.6"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/>',
+  hotel:'<path d="M3 21h18M5 21V6l7-3 7 3v15"/><path d="M9 9h.01M12 9h.01M15 9h.01M9 13h.01M12 13h.01M15 13h.01M10 21v-4h4v4"/>'
 };
-function goHome(){
-  Object.values(views).forEach(v=>v.classList.add("hidden"));
-  views.home.classList.remove("hidden");
-  $$("#tabbar button").forEach(b=>b.classList.remove("active"));
-  $("#h-title-txt").textContent="Team Last Milers";
-  renderHome(); window.scrollTo(0,0);
-}
+function goHome(){setTab('home');}
 function renderHome(){
   const st=startMs();
   let nowCard="";
@@ -1013,7 +1088,10 @@ function renderHome(){
      ${btn('rules','Rules','Penalties & traffic')}
      ${btn('safety','Safety','Emergency & night gear')}
      ${btn('clock','Race Clock','Who’s running now')}
-     ${btn('prep','Prep','Checklists & rotation')}
+     ${btn('vans','Vans','Who’s in each van')}
+     ${btn('weather','Weather','Course forecast')}
+     ${btn('hotel','Hotel','Address & map')}
+     ${btn('prep','Prep','Checklists & logistics')}
    </div>
    <div class="card">
      <h3>App updates</h3>
@@ -1063,15 +1141,7 @@ if("serviceWorker" in navigator){
 }
 
 /* ---- Nav wiring ---- */
-$$("#tabbar button").forEach(b=>b.onclick=()=>{
-  const t=b.dataset.tab;
-  if(t==="clock")renderClock();
-  if(t==="course"&&!views.course.innerHTML)renderCourse();
-  if(t==="rules"&&!views.rules.innerHTML)renderRules();
-  if(t==="safety"&&!views.safety.innerHTML)renderSafety();
-  if(t==="prep")renderPrep();
-  setTab(t);
-});
+$$("#tabbar button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
 $("#legSearch").oninput=e=>{curSearch=e.target.value;renderLegs();};
 $$("#vanSeg button").forEach(b=>b.onclick=()=>{
   $$("#vanSeg button").forEach(x=>x.classList.remove("active"));b.classList.add("active");

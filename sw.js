@@ -1,5 +1,5 @@
 /* HTC 2026 Driver Guide — offline service worker */
-const CACHE = 'htc26-v12';
+const CACHE = 'htc26-v13';
 const LEGMAPS = Array.from({ length: 36 }, (_, i) => `./legmaps/leg-${i + 1}.jpg`);
 const ASSETS = [
   './',
@@ -42,6 +42,9 @@ self.addEventListener('message', e => {
      and the user keeps their saved copy. */
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // Let cross-origin requests (e.g. the weather API) go straight to the network —
+  // don't cache or fall back to index.html for them.
+  if (new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
     const cached = await cache.match(e.request, { ignoreSearch: true });
