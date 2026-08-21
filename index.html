@@ -887,12 +887,12 @@ LEGS.forEach(l=>{CUM[l.n]=_c;_c+=l.mi;});
 const TOTAL_MI=_c;
 // Our team roster: runner # -> name + pace (min:sec per mile). Van 1 = runners 1–6, Van 2 = 7–12.
 const TEAM={
-  1:{n:"Milliron",p:"8:45"}, 2:{n:"Barnwell",p:"7:45"}, 3:{n:"Max / George",p:"8:45"},
-  4:{n:"Ponce",p:"7:45"}, 5:{n:"Lopez Lomong",p:"6:00"}, 6:{n:"Tim Green",p:"9:00"},
-  7:{n:"Palmenberg",p:"8:00"}, 8:{n:"Simmonds",p:"8:30"}, 9:{n:"Levi",p:"8:45"},
-  10:{n:"Erik Ochoa",p:"9:00"}, 11:{n:"Campbell",p:"9:00"}, 12:{n:"Kevin McKenna",p:"8:45"}
+  1:{n:"Milliron",p:"8:45"}, 2:{n:"Barnwell",p:"7:45"}, 3:{n:"Ray / Churchill",p:"8:45"},
+  4:{n:"Ponce",p:"7:45"}, 5:{n:"Lopez Lomong",p:"6:00"}, 6:{n:"Green",p:"9:00"},
+  7:{n:"Palmenberg",p:"8:00"}, 8:{n:"Simmonds",p:"8:30"}, 9:{n:"Shepard",p:"8:45"},
+  10:{n:"Ochoa",p:"9:00"}, 11:{n:"Campbell",p:"9:00"}, 12:{n:"McKenna",p:"8:45"}
 };
-const DRIVERS={1:["Sean Ward","Ross Buttermore"], 2:["Anthony (Compo)","Brad Zarin"]};
+const DRIVERS={1:["Ward","Buttermore"], 2:["Compo","Zarin"]};
 function runnerOf(leg){return TEAM[LEGINFO[leg].runner];}
 function paceMin(p){const [m,s]=String(p).split(":").map(Number);return m+(s||0)/60;}  // "8:45" -> 8.75
 
@@ -1155,7 +1155,7 @@ function renderHotel(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="3.7";
+const APP_VERSION="3.8";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
