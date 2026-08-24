@@ -905,7 +905,7 @@ const TEAM={
   7:{n:"Palmenberg",p:"8:00"}, 8:{n:"Simmonds",p:"8:30"}, 9:{n:"Shepard",p:"8:45"},
   10:{n:"Ochoa",p:"9:00"}, 11:{n:"Campbell",p:"9:00"}, 12:{n:"McKenna",p:"8:45"}
 };
-const DRIVERS={1:["Ward","Buttermore"], 2:["Compo","Zarin"]};
+const DRIVERS={1:["Ward","Buttermore"], 2:["Compo","Setser"]};
 function runnerOf(leg){return TEAM[LEGINFO[leg].runner];}
 function paceMin(p){const [m,s]=String(p).split(":").map(Number);return m+(s||0)/60;}  // "8:45" -> 8.75
 
@@ -1214,7 +1214,7 @@ function renderHotel(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="4.1";
+const APP_VERSION="4.2";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
