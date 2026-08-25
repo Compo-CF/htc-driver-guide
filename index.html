@@ -200,6 +200,17 @@ tr.doner td{color:var(--muted2)}
 img.mapimg{width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.1);display:block;background:#fff}
 img.legmap{width:100%;display:block;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#fff;cursor:zoom-in}
 img.mapimg{cursor:zoom-in}
+/* hype song */
+.song-card{display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,#173a2c,#15243a);
+  border:1px solid rgba(29,185,84,.35);margin-bottom:12px}
+.song-card .song-ic{font-size:26px;line-height:1}
+.song-card .song-body{flex:1;min-width:0}
+.song-card .song-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#8fe3bd;font-weight:800}
+.song-card .song-title{font-weight:800;font-size:16px;margin-top:1px}
+.song-card .song-artist{font-size:13px;color:var(--muted)}
+.song-card .song-play{width:42px;height:42px;border-radius:50%;background:#1db954;color:#fff;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:16px;text-decoration:none;padding-left:2px}
+.song-card .song-play:active{opacity:.85}
 /* schedule */
 .sched-item{display:flex;gap:12px;padding:13px 15px}
 .sched-item .st-time{min-width:92px;flex-shrink:0;font-weight:800;font-size:13px;color:var(--accent);line-height:1.35}
@@ -642,6 +653,12 @@ function openLeg(n){
         <div class="stat"><div class="v">${l.dir.length-1}</div><div class="l">Cues</div></div>
       </div>
     </div>
+    ${SONGS[n]?`<div class="card song-card">
+      <div class="song-ic">🎵</div>
+      <div class="song-body"><div class="song-label">${esc(rn.n)}'s hype song</div>
+        <div class="song-title">${esc(SONGS[n].t)}</div><div class="song-artist">${esc(SONGS[n].a)}</div></div>
+      <a class="song-play" href="https://open.spotify.com/search/${encodeURIComponent(SONGS[n].t+" "+SONGS[n].a)}" target="_blank" rel="noopener" aria-label="Search on Spotify">▶</a>
+    </div>`:""}
     <a class="gps-btn" href="${mapsUrl}">📍 Open Exchange in Apple Maps</a>
     ${startMs()?`<div class="addr" style="margin:-4px 4px 10px;color:var(--accent);font-weight:700">🕐 Projected: ${fmtClock(startMs()+legStartMin(n)*60000)} → ${fmtClock(startMs()+legEndMin(n)*60000)}</div>`:""}
     <div class="addr" style="margin:-4px 4px 12px">${esc(l.exch)}<br>GPS ${l.lat}, ${l.lng}</div>
@@ -909,6 +926,12 @@ const TEAM={
   10:{n:"Ochoa",p:"9:00"}, 11:{n:"Campbell",p:"9:00"}, 12:{n:"McKenna",p:"8:45"}
 };
 const DRIVERS={1:["Ward","Buttermore"], 2:["Compo","Setser"]};
+// Per-leg hype / walk-up songs (keyed by leg number)
+const SONGS={
+  7:{t:"Full Nelson",a:"Limp Bizkit"},
+  19:{t:"Ramble On",a:"Led Zeppelin"},
+  31:{t:"The Largest",a:"BigXthaPlug"}
+};
 function runnerOf(leg){return TEAM[LEGINFO[leg].runner];}
 function paceMin(p){const [m,s]=String(p).split(":").map(Number);return m+(s||0)/60;}  // "8:45" -> 8.75
 
@@ -1249,7 +1272,7 @@ function renderHotel(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="4.3";
+const APP_VERSION="4.4";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
