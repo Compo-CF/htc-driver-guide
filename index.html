@@ -1040,7 +1040,8 @@ function renderVans(){
       <div class="tbl-wrap">${rosterTable(v)}</div>
       <p class="muted small" style="margin-bottom:0"><b>🚐 Drivers:</b> ${esc(DRIVERS[v].join(" · "))}</p></div>`;
   };
-  views.vans.innerHTML=`<div class="note-box">Two vans leapfrog the course, swapping runners at the major exchanges (6, 12, 18, 24, 30). The Van 2 sign is required to access legs 19–23 &amp; 32–36.</div>`+vc(1)+vc(2);
+  const playlist=`<a class="gps-btn" href="https://open.spotify.com/playlist/4secKf7FsKWKOa13l0h3Jl?si=YYCq85qPSyKNU3Kndk0nrw" target="_blank" rel="noopener" style="background:#1db954">🎵 Van 2 Hype Playlist</a>`;
+  views.vans.innerHTML=`<div class="note-box">Two vans leapfrog the course, swapping runners at the major exchanges (6, 12, 18, 24, 30). The Van 2 sign is required to access legs 19–23 &amp; 32–36.</div>`+vc(1)+vc(2)+playlist;
 }
 
 /* ---- Weather (live when online, last-saved when not) ---- */
@@ -1272,7 +1273,7 @@ function renderHotel(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="4.4";
+const APP_VERSION="4.5";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
