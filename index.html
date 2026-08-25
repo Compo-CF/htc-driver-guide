@@ -201,16 +201,24 @@ img.mapimg{width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.1);d
 img.legmap{width:100%;display:block;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#fff;cursor:zoom-in}
 img.mapimg{cursor:zoom-in}
 /* hype song */
-.song-card{display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,#173a2c,#15243a);
-  border:1px solid rgba(29,185,84,.35);margin-bottom:12px}
-.song-card .song-ic{font-size:26px;line-height:1}
+.song-card{background:linear-gradient(135deg,#173a2c,#15243a);border:1px solid rgba(29,185,84,.35);margin-bottom:12px}
+.song-card .song-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#8fe3bd;font-weight:800;margin-bottom:6px}
+.song-card .song-row{display:flex;align-items:center;gap:13px;padding:7px 0;border-top:1px solid rgba(255,255,255,.06)}
+.song-card .song-row:first-of-type{border-top:0}
 .song-card .song-body{flex:1;min-width:0}
-.song-card .song-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#8fe3bd;font-weight:800}
-.song-card .song-title{font-weight:800;font-size:16px;margin-top:1px}
+.song-card .song-title{font-weight:800;font-size:16px}
 .song-card .song-artist{font-size:13px;color:var(--muted)}
-.song-card .song-play{width:42px;height:42px;border-radius:50%;background:#1db954;color:#fff;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;font-size:16px;text-decoration:none;padding-left:2px}
-.song-card .song-play:active{opacity:.85}
+.song-card .song-play,.set-row .sr-play{background:#1db954;color:#fff;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;text-decoration:none;padding-left:2px}
+.song-card .song-play{width:40px;height:40px;border-radius:50%;font-size:15px}
+.song-card .song-play:active,.set-row .sr-play:active{opacity:.85}
+/* van set list */
+.set-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid rgba(255,255,255,.05)}
+.set-row:last-child{border-bottom:0}
+.set-row .sr-body{flex:1;min-width:0}
+.set-row .sr-t{font-weight:700;font-size:14px}
+.set-row .sr-a{font-size:12.5px;color:var(--muted)}
+.set-row .sr-play{width:34px;height:34px;border-radius:50%;font-size:13px}
 /* schedule */
 .sched-item{display:flex;gap:12px;padding:13px 15px}
 .sched-item .st-time{min-width:92px;flex-shrink:0;font-weight:800;font-size:13px;color:var(--accent);line-height:1.35}
@@ -653,11 +661,11 @@ function openLeg(n){
         <div class="stat"><div class="v">${l.dir.length-1}</div><div class="l">Cues</div></div>
       </div>
     </div>
-    ${SONGS[n]?`<div class="card song-card">
-      <div class="song-ic">🎵</div>
-      <div class="song-body"><div class="song-label">${esc(rn.n)}'s hype song</div>
-        <div class="song-title">${esc(SONGS[n].t)}</div><div class="song-artist">${esc(SONGS[n].a)}</div></div>
-      <a class="song-play" href="https://open.spotify.com/search/${encodeURIComponent(SONGS[n].t+" "+SONGS[n].a)}" target="_blank" rel="noopener" aria-label="Search on Spotify">▶</a>
+    ${legSongs(n).length?`<div class="card song-card">
+      <div class="song-label">🎵 ${esc(rn.n)}'s hype ${legSongs(n).length>1?"set":"song"}</div>
+      ${legSongs(n).map(s=>`<div class="song-row">
+        <div class="song-body"><div class="song-title">${esc(s.t)}</div><div class="song-artist">${esc(s.a)}</div></div>
+        <a class="song-play" href="${spotifySearch(s.t,s.a)}" target="_blank" rel="noopener" aria-label="Search on Spotify">▶</a></div>`).join("")}
     </div>`:""}
     <a class="gps-btn" href="${mapsUrl}">📍 Open Exchange in Apple Maps</a>
     ${startMs()?`<div class="addr" style="margin:-4px 4px 10px;color:var(--accent);font-weight:700">🕐 Projected: ${fmtClock(startMs()+legStartMin(n)*60000)} → ${fmtClock(startMs()+legEndMin(n)*60000)}</div>`:""}
@@ -926,11 +934,24 @@ const TEAM={
   10:{n:"Ochoa",p:"9:00"}, 11:{n:"Campbell",p:"9:00"}, 12:{n:"McKenna",p:"8:45"}
 };
 const DRIVERS={1:["Setser","Buttermore"], 2:["Compo","Ward"]};
-// Per-leg hype / walk-up songs (keyed by leg number)
+// Per-leg hype / walk-up songs (keyed by leg number). Value is one {t,a} or an array (a "set").
 const SONGS={
   7:{t:"Full Nelson",a:"Limp Bizkit"},
   19:{t:"Ramble On",a:"Led Zeppelin"},
-  31:{t:"The Largest",a:"BigXthaPlug"}
+  31:{t:"The Largest",a:"BigXthaPlug"},
+  12:[{t:"Scarlet Begonias",a:"Grateful Dead"},{t:"Fire on the Mountain",a:"Grateful Dead"}],
+  24:[{t:"Scarlet Begonias",a:"Grateful Dead"},{t:"Fire on the Mountain",a:"Grateful Dead"}],
+  36:[{t:"Scarlet Begonias",a:"Grateful Dead"},{t:"Fire on the Mountain",a:"Grateful Dead"}]
+};
+function legSongs(n){const s=SONGS[n];return !s?[]:(Array.isArray(s)?s:[s]);}
+function spotifySearch(t,a){return "https://open.spotify.com/search/"+encodeURIComponent(t+" "+a);}
+// General van song pool (suggested picks)
+const VAN_SET={
+  run:[["Lose Yourself","Eminem"],["Till I Collapse","Eminem"],["Can't Hold Us","Macklemore & Ryan Lewis"],
+    ["Stronger","Kanye West"],["POWER","Kanye West"],["Thunderstruck","AC/DC"],["Seven Nation Army","The White Stripes"],
+    ["Uptown Funk","Mark Ronson ft. Bruno Mars"],["HUMBLE.","Kendrick Lamar"],["Don't Stop Me Now","Queen"]],
+  wake:[["Mr. Brightside","The Killers"],["Wake Me Up","Avicii"],["Here Comes the Sun","The Beatles"],
+    ["Good Feeling","Flo Rida"],["September","Earth, Wind & Fire"]]
 };
 function runnerOf(leg){return TEAM[LEGINFO[leg].runner];}
 function paceMin(p){const [m,s]=String(p).split(":").map(Number);return m+(s||0)/60;}  // "8:45" -> 8.75
@@ -1040,8 +1061,20 @@ function renderVans(){
       <div class="tbl-wrap">${rosterTable(v)}</div>
       <p class="muted small" style="margin-bottom:0"><b>🚐 Drivers:</b> ${esc(DRIVERS[v].join(" · "))}</p></div>`;
   };
-  const playlist=`<a class="gps-btn" href="https://open.spotify.com/playlist/4secKf7FsKWKOa13l0h3Jl?si=YYCq85qPSyKNU3Kndk0nrw" target="_blank" rel="noopener" style="background:#1db954">🎵 Van 2 Hype Playlist</a>`;
-  views.vans.innerHTML=`<div class="note-box">Two vans leapfrog the course, swapping runners at the major exchanges (6, 12, 18, 24, 30). The Van 2 sign is required to access legs 19–23 &amp; 32–36.</div>`+vc(1)+vc(2)+playlist;
+  const playlist=`<a class="gps-btn" href="https://open.spotify.com/playlist/4secKf7FsKWKOa13l0h3Jl?si=YYCq85qPSyKNU3Kndk0nrw" target="_blank" rel="noopener" style="background:#1db954;margin-bottom:12px">🎵 Van 2 Hype Playlist</a>`;
+  const setRow=(t,a,sub)=>`<div class="set-row"><div class="sr-body"><div class="sr-t">${esc(t)}</div>
+    <div class="sr-a">${esc(a)}${sub?" · "+esc(sub):""}</div></div>
+    <a class="sr-play" href="${spotifySearch(t,a)}" target="_blank" rel="noopener" aria-label="Search on Spotify">▶</a></div>`;
+  const van2Legs=[7,8,9,10,11,12,19,20,21,22,23,24,31,32,33,34,35,36];
+  const walk=[]; van2Legs.forEach(l=>legSongs(l).forEach(s=>walk.push(setRow(s.t,s.a,runnerOf(l).n+" · Leg "+l))));
+  const setlist=`
+    <h2 class="sec">Van 2 set list</h2>
+    ${playlist}
+    <div class="card"><h3>🎤 Runner walk-up songs</h3>${walk.join("")||'<p class="muted small" style="margin:0">None assigned yet.</p>'}</div>
+    <div class="card"><h3>🏃 Run hype</h3>${VAN_SET.run.map(s=>setRow(s[0],s[1])).join("")}</div>
+    <div class="card"><h3>😴 Wake-up</h3>${VAN_SET.wake.map(s=>setRow(s[0],s[1])).join("")}</div>
+    <p class="muted small" style="text-align:center">▶ opens a Spotify search. For offline in the dead zone, a Premium user should download the playlist first.</p>`;
+  views.vans.innerHTML=`<div class="note-box">Two vans leapfrog the course, swapping runners at the major exchanges (6, 12, 18, 24, 30). The Van 2 sign is required to access legs 19–23 &amp; 32–36.</div>`+vc(1)+vc(2)+setlist;
 }
 
 /* ---- Weather (live when online, last-saved when not) ---- */
@@ -1273,7 +1306,7 @@ function renderHotel(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="4.6";
+const APP_VERSION="4.7";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
