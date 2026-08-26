@@ -1201,17 +1201,20 @@ function renderConfirmations(){
 }
 
 /* ---- Schedule (Team World Vision weekend itinerary) ---- */
+const MAP_SHERATON="https://www.google.com/maps/search/Sheraton+Portland+Airport+Hotel+8235+NE+Airport+Way+Portland+OR";
+const MAP_NIKE="https://www.google.com/maps/search/Michael+Johnson+Track+Nike+World+Headquarters+Beaverton+OR";
+const MAP_TIMBERLINE="https://www.google.com/maps/search/Timberline+Lodge+27500+E+Timberline+Rd+Government+Camp+OR";
 const SCHEDULE=[
  {day:"Wednesday · Aug 26",sub:"Arrivals",items:[
-   {t:"3:00–6:00 PM",title:"TWV Check-In Table",loc:"Sheraton — Lobby",note:"Check in and pick up your race-weekend goodies & info. (Also available Thu 2–4 PM if you miss it.)"},
-   {t:"4:30–6:00 PM",title:"Welcome Social Hour",loc:"Rose & Compass Restaurant (Sheraton)",note:"Connect with runners, World Vision staff, and Lopez Lomong. Food & drinks for purchase."},
+   {t:"3:00–6:00 PM",title:"TWV Check-In Table",loc:"Sheraton — Lobby",map:MAP_SHERATON,note:"Check in and pick up your race-weekend goodies & info. (Also available Thu 2–4 PM if you miss it.)"},
+   {t:"4:30–6:00 PM",title:"Welcome Social Hour",loc:"Rose & Compass Restaurant (Sheraton)",map:MAP_SHERATON,note:"Connect with runners, World Vision staff, and Lopez Lomong. Food & drinks for purchase."},
    {t:"5:00 PM",title:"Team Dinner",loc:"Jawfish · 11707 NE Airport Way",map:"https://www.google.com/maps/search/Jawfish+11707+NE+Airport+Way+Portland+OR+97220"}
  ]},
  {day:"Thursday · Aug 27",sub:"Nike Day & Team Dinner",items:[
-   {t:"6:45 AM",title:"Meet & load vans",loc:"Sheraton Lobby"},
-   {t:"7:00–9:00 AM",title:"Shakeout run with Lopez Lomong",loc:"Nike — Michael Johnson Track (near Nike SW parking lot)"},
+   {t:"6:45 AM",title:"Meet & load vans",loc:"Sheraton Lobby",map:MAP_SHERATON},
+   {t:"7:00–9:00 AM",title:"Shakeout run with Lopez Lomong",loc:"Nike — Michael Johnson Track (near Nike SW parking lot)",map:MAP_NIKE},
    {t:"9 AM–3 PM",title:"Nike shopping, race prep & team time",loc:"Nike staff store",note:"Hit the grocery store for race-day supplies and pack your bags."},
-   {t:"2:00–4:00 PM",title:"TWV Check-In Table",loc:"Sheraton Lobby"},
+   {t:"2:00–4:00 PM",title:"TWV Check-In Table",loc:"Sheraton Lobby",map:MAP_SHERATON},
    {t:"2:00–4:00 PM",title:"Safety gear & supplies pickup",loc:"Mount St. Helens A",note:"Captains + one runner per van. Coolers, seat covers, safety gear & more."},
    {t:"3:30–4:30 PM",title:"Driver's Safety Training",loc:"Mount St. Helens C",note:"REQUIRED for all HTC drivers and team captains.",req:true},
    {t:"5:00–6:00 PM",title:"Social hour + photo with Lopez Lomong",loc:"Mount Hood Foyer"},
@@ -1219,15 +1222,15 @@ const SCHEDULE=[
  ]},
  {day:"Friday · Aug 28",sub:"Race Day",items:[
    {t:"4:15–4:45 AM",title:"Grab & Go breakfast",loc:"Garden C",note:"Drop overnight bags at Cascade C, check out of your room, and bring all race-day gear."},
-   {t:"4:45 AM",title:"Load vans & depart for the start",loc:"Sheraton"},
-   {t:"6:15–7:00 AM",title:"Check-in & pep rally",loc:"Mount Hood",note:"Van 1 · Runner 1 checks in at the safety station for slap bracelets."},
-   {t:"6:45 AM",title:"Team pep rally",loc:"Amphitheater behind Timberline Lodge"},
-   {t:"7:00 AM",title:"Head to start line + team photos",loc:"Timberline"},
-   {t:"7:40 AM",title:"🏁 RACE STARTS!",loc:"Timberline Lodge",key:true}
+   {t:"4:45 AM",title:"Load vans & depart for the start",loc:"Sheraton",map:MAP_SHERATON},
+   {t:"6:15–7:00 AM",title:"Check-in & pep rally",loc:"Mount Hood",map:MAP_TIMBERLINE,note:"Van 1 · Runner 1 checks in at the safety station for slap bracelets."},
+   {t:"6:45 AM",title:"Team pep rally",loc:"Amphitheater behind Timberline Lodge",map:MAP_TIMBERLINE},
+   {t:"7:00 AM",title:"Head to start line + team photos",loc:"Timberline",map:MAP_TIMBERLINE},
+   {t:"7:40 AM",title:"🏁 RACE STARTS!",loc:"Timberline Lodge",map:MAP_TIMBERLINE,key:true}
  ]},
  {day:"Saturday · Aug 29",sub:"Finish & Celebration",items:[
    {t:"Afternoon",title:"Finish line",loc:"Seaside",note:"Cross the finish as a team, then head to the celebration tent for food."},
-   {t:"By 6:00 PM",title:"Return to hotel",loc:"Sheraton",note:"Clean out the vans, unpack & return all TWV safety gear. Donuts + swap stories."},
+   {t:"By 6:00 PM",title:"Return to hotel",loc:"Sheraton",map:MAP_SHERATON,note:"Clean out the vans, unpack & return all TWV safety gear. Donuts + swap stories."},
    {t:"Evening",title:"Dinner",loc:"On your own / with your team"}
  ]},
  {day:"Sunday · Aug 30",sub:"Departures",items:[
@@ -1306,7 +1309,7 @@ function renderHotel(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="4.9";
+const APP_VERSION="5.0";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
