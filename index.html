@@ -1378,9 +1378,9 @@ function renderPhotos(){
    ${SHARED_ALBUM?`<a class="gps-btn" href="${SHARED_ALBUM}" target="_blank" rel="noopener" style="background:#4285f4">🖼️ Team Shared Album</a>`:`<div class="note-box" style="border-color:rgba(255,207,92,.3)">Team shared album link not set yet — ask Anthony to add it.</div>`}
    <label class="btn-primary" style="display:block;text-align:center;cursor:pointer">📷 Take / add photo
      <input id="photoIn" type="file" accept="image/*" multiple style="display:none"></label>
-   <button class="btn-primary" id="shareAll" style="background:#1db954;margin-top:8px;display:none">↗ Share all to Google Photos</button>
+   <button class="btn-primary" id="shareAll" style="background:#1db954;margin-top:8px;display:none">↗ Share / save all photos</button>
    <p class="muted small" id="photoStatus" style="margin:8px 2px 0;min-height:16px"></p>
-   <p class="muted small" style="margin:0 2px 0">Share opens your phone’s share sheet — pick <b>Google Photos</b>, then add to the Team Album.</p>
+   <p class="muted small" style="margin:0 2px 0">↗ opens your phone’s share sheet. Have <b>Google Photos</b>? Pick it and add to the Team Album. No app? Choose <b>Save Image</b>, then upload later — or just open the <b>Team Shared Album</b> to view.</p>
    <h2 class="sec">On this phone <span class="progress" id="photoCount"></span></h2>
    <div id="photoGrid" class="photo-grid"></div>`;
   $("#photoIn").onchange=async e=>{
@@ -1394,7 +1394,7 @@ function renderPhotos(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="5.7";
+const APP_VERSION="5.8";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
