@@ -1323,7 +1323,7 @@ function renderHotel(){
 }
 
 /* ---- Photos (in-app camera, stored locally per device; shared album link) ---- */
-const SHARED_ALBUM="";  // paste the team's Google Photos / iCloud shared-album link here
+const SHARED_ALBUM="https://photos.app.goo.gl/4fVx6jqDENv8XmfF9";  // team Google Photos shared album
 function idb(){return new Promise((res,rej)=>{const r=indexedDB.open("htc26photos",1);
   r.onupgradeneeded=()=>r.result.createObjectStore("photos",{keyPath:"id"});
   r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});}
@@ -1371,7 +1371,7 @@ function renderPhotos(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="5.4";
+const APP_VERSION="5.5";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
