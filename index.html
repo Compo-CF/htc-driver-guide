@@ -677,6 +677,11 @@ function openLeg(n){
       <p class="muted small" style="margin-bottom:0">Handbook route map — the red line is this leg. Tap to zoom.</p>
     </div>
     <div class="card">
+      <h3>Elevation profile</h3>
+      <img class="legmap" src="./elev/leg-${n}.jpg" loading="lazy" alt="Leg ${n} elevation profile" onclick="openLightbox('./elev/leg-${n}.jpg','Leg ${n} elevation')">
+      <p class="muted small" style="margin-bottom:0">${esc(l.elev)} · tap to zoom</p>
+    </div>
+    <div class="card">
       <h3>Turn-by-turn <span class="progress">${esc(l.side||"")}</span></h3>
       ${dirRows}
     </div>
@@ -1310,7 +1315,7 @@ function renderHotel(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="5.2";
+const APP_VERSION="5.3";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',

@@ -1,6 +1,7 @@
 /* HTC 2026 Driver Guide — offline service worker */
-const CACHE = 'htc26-v34';
+const CACHE = 'htc26-v35';
 const LEGMAPS = Array.from({ length: 36 }, (_, i) => `./legmaps/leg-${i + 1}.jpg`);
+const ELEVMAPS = Array.from({ length: 36 }, (_, i) => `./elev/leg-${i + 1}.jpg`);
 const ASSETS = [
   './',
   './index.html',
@@ -11,7 +12,8 @@ const ASSETS = [
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png',
-  ...LEGMAPS
+  ...LEGMAPS,
+  ...ELEVMAPS
 ];
 
 self.addEventListener('install', e => {
