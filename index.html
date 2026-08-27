@@ -651,11 +651,47 @@ function parseTime(s){
 function fmtDur2(sec){sec=Math.round(sec);const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
   return h?`${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`:`${m}:${String(s).padStart(2,"0")}`;}
 function fmtPaceSec(sec){sec=Math.round(sec);const m=Math.floor(sec/60),s=sec%60;return `${m}:${String(s).padStart(2,"0")}`;}
-function legTime(n){const v=localStorage.getItem("htc26_time_"+n);return v?Number(v):null;}
+/* Shared leg times via Firestore, with a local mirror so entry works offline and syncs later. */
+const FIREBASE_CONFIG={apiKey:"AIzaSyBeQE4gYpMQRriZzVF7VRLYtU_HDhr-aBs",authDomain:"hood2-ce8f1.firebaseapp.com",
+  projectId:"hood2-ce8f1",storageBucket:"hood2-ce8f1.firebasestorage.app",messagingSenderId:"227680866504",
+  appId:"1:227680866504:web:ba651a3b34f3329e5055fd"};
+let _openLeg=null;
+let TIMES={};
+(function initTimes(){ try{TIMES=JSON.parse(localStorage.getItem("htc26_times")||"null")||{};}catch(e){TIMES={};}
+  for(let n=1;n<=36;n++){const v=localStorage.getItem("htc26_time_"+n);if(v!=null&&TIMES[n]==null)TIMES[n]=Number(v);} })();
+function saveTimesLocal(){try{localStorage.setItem("htc26_times",JSON.stringify(TIMES));}catch(e){}}
+function legTime(n){const v=TIMES[n];return v==null?null:Number(v);}
+function refreshTimeViews(){
+  if(curTab==="results")renderResults();
+  else if(curTab==="legs")renderLegs();
+  else if(curTab==="clock")renderClock();
+  if(_openLeg&&!views.detail.classList.contains("hidden"))openLeg(_openLeg);
+}
+let _fb=null,_fbLoading=null;
+function ensureFirebase(){
+  if(_fb)return Promise.resolve(_fb);
+  if(_fbLoading)return _fbLoading;
+  _fbLoading=(async()=>{
+    const V="https://www.gstatic.com/firebasejs/10.13.2/";
+    const appMod=await import(V+"firebase-app.js");
+    const fs=await import(V+"firebase-firestore.js");
+    const app=appMod.initializeApp(FIREBASE_CONFIG);
+    let db;
+    try{db=fs.initializeFirestore(app,{localCache:fs.persistentLocalCache({tabManager:fs.persistentMultipleTabManager()})});}
+    catch(e){db=fs.getFirestore(app);}
+    const ref=fs.doc(db,"htc","results");
+    _fb={fs,db,ref};
+    fs.onSnapshot(ref,snap=>{const d=snap.data()||{};TIMES=d.times||{};saveTimesLocal();refreshTimeViews();},err=>{});
+    return _fb;
+  })();
+  return _fbLoading;
+}
 function saveLegTime(n){const el=$("#timeIn");if(!el)return;const sec=parseTime(el.value);
   if(sec==null){el.style.borderColor="var(--danger)";el.focus();return;}
-  localStorage.setItem("htc26_time_"+n,sec);openLeg(n);}
-function clearLegTime(n){localStorage.removeItem("htc26_time_"+n);openLeg(n);}
+  TIMES[n]=sec;saveTimesLocal();openLeg(n);
+  ensureFirebase().then(fb=>fb.fs.setDoc(fb.ref,{times:{[n]:sec}},{merge:true})).catch(()=>{});}
+function clearLegTime(n){delete TIMES[n];saveTimesLocal();openLeg(n);
+  ensureFirebase().then(fb=>fb.fs.updateDoc(fb.ref,{["times."+n]:fb.fs.deleteField()})).catch(()=>{});}
 
 function openLeg(n){
   const l=LEGS.find(x=>x.n===n);
@@ -668,6 +704,7 @@ function openLeg(n){
     return `<div class="dir ${fin?'fin':''} ${st?'start':''}"><div class="mi">${d[0]}</div><div class="ar">${d[1]}</div><div class="tx">${esc(d[2])}</div></div>`;
   }).join("");
   const kv=(k,v)=>v?`<div class="kv"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`:"";
+  _openLeg=n;
   const rn=TEAM[LEGINFO[n].runner];
   const rec=legTime(n);
   $("#detailBody").innerHTML=`
@@ -1330,7 +1367,7 @@ function renderResults(){
   const L=[];
   LEGS.forEach(l=>{const t=legTime(l.n); if(t!=null){const r=LEGINFO[l.n].runner;
     L.push({n:l.n,mi:l.mi,sec:t,runner:r,name:runnerName(l.n),van:LEGINFO[l.n].van,pace:t/l.mi,projPace:paceMin(TEAM[r].p)*60});}});
-  if(!L.length){views.results.innerHTML=`<div class="note-box">📊 No leg times logged yet. As runners finish, tap their leg and enter the time under <b>⏱ Your time</b> — results and analytics appear here.<br><br>For full team stats, log every leg's time on one phone (e.g., the captain records each split).</div>`;return;}
+  if(!L.length){views.results.innerHTML=`<div class="note-box">📊 No leg times logged yet. As runners finish, tap their leg and enter the time under <b>⏱ Your time</b> — it's <b>shared live</b> with the whole team, so results and analytics show up here for everyone.</div>`;return;}
   const totSec=L.reduce((a,b)=>a+b.sec,0), totMi=L.reduce((a,b)=>a+b.mi,0);
   const projSec=L.reduce((a,b)=>a+b.projPace*b.mi,0);
   const overall=totSec/totMi, delta=totSec-projSec;
@@ -1349,7 +1386,7 @@ function renderResults(){
     return `<tr><td>${x.n}</td><td class="name" style="text-align:left">${esc(x.name)}</td><td>${fmtDur2(x.sec)}</td>
       <td>${fmtPaceSec(x.pace)}</td><td style="color:${d<0?'var(--e)':(d>0?'var(--h)':'var(--muted)')}">${d<0?'−':(d>0?'+':'')}${fmtPaceSec(Math.abs(d))}</td></tr>`;}).join("");
   views.results.innerHTML=`
-   <div class="note-box">📊 Analytics from times entered on <b>this phone</b> (${L.length}/36 legs logged).${complete?'':' Log every leg for full team results.'}</div>
+   <div class="note-box">📊 Live team results — shared across everyone (${L.length}/36 legs logged).${complete?'':' Anyone can log a leg time on its screen and it appears here for all.'}</div>
    <div class="detail-head">
      <div class="stats" style="margin-top:0">
        ${stat(complete?'🏁 '+fmtDur2(totSec):fmtDur2(totSec), complete?'Team finish':'Time logged')}
@@ -1372,7 +1409,7 @@ function renderResults(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="6.2";
+const APP_VERSION="6.3";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -1547,6 +1584,7 @@ $$("#vanSeg button").forEach(b=>b.onclick=()=>{
 })();
 
 setTab("home");   // land on Home
+if(navigator.onLine) ensureFirebase().catch(()=>{});  // start live shared-results sync
 
 /* ---- Service worker (offline + auto-update) ---- */
 if('serviceWorker' in navigator){
