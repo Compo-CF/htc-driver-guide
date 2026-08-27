@@ -106,6 +106,9 @@ h2.sec:first-child{margin-top:4px}
   background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;
   padding:14px;border-radius:13px;font-size:15px;font-weight:800;margin-bottom:12px;cursor:pointer}
 .gps-btn:active{opacity:.85}
+.map-btns{display:flex;gap:8px;margin-bottom:12px}
+.map-btns .gps-btn{flex:1;margin:0}
+.gps-btn.waze{background:linear-gradient(135deg,#33ccff,#0099e6)}
 .addr{font-size:13.5px;color:var(--muted);margin-top:8px;line-height:1.4}
 .note-box{background:rgba(255,207,92,.1);border:1px solid rgba(255,207,92,.3);border-radius:12px;
   padding:12px 14px;margin-bottom:12px;font-size:14px;line-height:1.5;color:#ffe9b8}
@@ -730,7 +733,7 @@ function openLeg(n){
         <div class="song-body"><div class="song-title">${esc(s.t)}</div><div class="song-artist">${esc(s.a)}</div></div>
         <a class="song-play" href="${spotifySearch(s.t,s.a)}" target="_blank" rel="noopener" aria-label="Search on Spotify">▶</a></div>`).join("")}
     </div>`:""}
-    <a class="gps-btn" href="${mapsUrl}">📍 Open Exchange in Apple Maps</a>
+    <div class="map-btns"><a class="gps-btn" href="${mapsUrl}">📍 Apple Maps</a><a class="gps-btn waze" href="https://waze.com/ul?ll=${l.lat},${l.lng}&navigate=yes">🚗 Waze</a></div>
     ${startMs()?`<div class="addr" style="margin:-4px 4px 10px;color:var(--accent);font-weight:700">🕐 Projected: ${fmtClock(startMs()+legStartMin(n)*60000)} → ${fmtClock(startMs()+legEndMin(n)*60000)}</div>`:""}
     <div class="addr" style="margin:-4px 4px 12px">${esc(l.exch)}<br>GPS ${l.lat}, ${l.lng}</div>
     <div class="card">
@@ -1352,7 +1355,7 @@ function renderHotel(){
   views.hotel.innerHTML=`
    <div class="detail-head"><h2 style="margin:0;font-size:20px">🏨 ${esc(HOTEL.name)}</h2>
      <div class="ded" style="margin-top:4px">${esc(HOTEL.addr)}</div></div>
-   <a class="gps-btn" href="${maps}">📍 Open in Maps</a>
+   <div class="map-btns"><a class="gps-btn" href="${maps}">📍 Apple Maps</a><a class="gps-btn waze" href="https://waze.com/ul?ll=${HOTEL.lat},${HOTEL.lng}&navigate=yes">🚗 Waze</a></div>
    <img class="legmap" src="./hotel-map.jpg" alt="Hotel map" loading="lazy" onclick="openLightbox('./hotel-map.jpg','${esc(HOTEL.name)}')" style="margin-bottom:12px">
    <div class="card">
      <div class="kv"><div class="k">Address</div><div class="v">${esc(HOTEL.addr)}</div></div>
@@ -1414,7 +1417,7 @@ function renderResults(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="6.5";
+const APP_VERSION="6.6";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
