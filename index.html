@@ -138,6 +138,9 @@ th{background:var(--bg2);color:var(--muted);font-size:11px;text-transform:upperc
 td.name{text-align:left;font-weight:600}
 .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:1px}
 .dot.E{background:var(--e)}.dot.M{background:var(--m)}.dot.H{background:var(--h)}.dot.VH{background:var(--vh)}
+.tclr{background:rgba(255,93,93,.18);color:var(--danger);border:0;width:26px;height:26px;border-radius:7px;
+  font-size:12px;font-weight:800;cursor:pointer;line-height:1}
+.tclr:active{background:rgba(255,93,93,.32)}
 
 /* checklist */
 .chk{display:flex;align-items:center;gap:13px;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,.055);cursor:pointer}
@@ -690,8 +693,9 @@ function saveLegTime(n){const el=$("#timeIn");if(!el)return;const sec=parseTime(
   if(sec==null){el.style.borderColor="var(--danger)";el.focus();return;}
   TIMES[n]=sec;saveTimesLocal();openLeg(n);
   ensureFirebase().then(fb=>fb.fs.setDoc(fb.ref,{times:{[n]:sec}},{merge:true})).catch(()=>{});}
-function clearLegTime(n){delete TIMES[n];saveTimesLocal();openLeg(n);
+function clearLegTime(n){delete TIMES[n];saveTimesLocal();refreshTimeViews();
   ensureFirebase().then(fb=>fb.fs.updateDoc(fb.ref,{["times."+n]:fb.fs.deleteField()})).catch(()=>{});}
+function clearResult(n){if(confirm("Clear the recorded time for Leg "+n+"? This removes it for the whole team."))clearLegTime(n);}
 
 function openLeg(n){
   const l=LEGS.find(x=>x.n===n);
@@ -1384,7 +1388,8 @@ function renderResults(){
       <td>${fmtDur2(s)}</td><td>${fmtPaceSec(s/mi)}</td></tr>`;}).join("");
   const lrows=[...L].sort((a,b)=>a.n-b.n).map(x=>{const d=x.pace-x.projPace;
     return `<tr><td>${x.n}</td><td class="name" style="text-align:left">${esc(x.name)}</td><td>${fmtDur2(x.sec)}</td>
-      <td>${fmtPaceSec(x.pace)}</td><td style="color:${d<0?'var(--e)':(d>0?'var(--h)':'var(--muted)')}">${d<0?'−':(d>0?'+':'')}${fmtPaceSec(Math.abs(d))}</td></tr>`;}).join("");
+      <td>${fmtPaceSec(x.pace)}</td><td style="color:${d<0?'var(--e)':(d>0?'var(--h)':'var(--muted)')}">${d<0?'−':(d>0?'+':'')}${fmtPaceSec(Math.abs(d))}</td>
+      <td><button class="tclr" title="Clear this time" onclick="clearResult(${x.n})">✕</button></td></tr>`;}).join("");
   views.results.innerHTML=`
    <div class="note-box">📊 Live team results — shared across everyone (${L.length}/36 legs logged).${complete?'':' Anyone can log a leg time on its screen and it appears here for all.'}</div>
    <div class="detail-head">
@@ -1404,12 +1409,12 @@ function renderResults(){
    <h2 class="sec">By runner</h2>
    <div class="tbl-wrap"><table><thead><tr><th>Van</th><th>Runner</th><th>Legs</th><th>Total</th><th>Avg /mi</th></tr></thead><tbody>${rrows}</tbody></table></div>
    <h2 class="sec">By leg</h2>
-   <div class="tbl-wrap"><table><thead><tr><th>Leg</th><th>Runner</th><th>Time</th><th>Pace</th><th>vs proj</th></tr></thead><tbody>${lrows}</tbody></table></div>
+   <div class="tbl-wrap"><table><thead><tr><th>Leg</th><th>Runner</th><th>Time</th><th>Pace</th><th>vs proj</th><th></th></tr></thead><tbody>${lrows}</tbody></table></div>
    <p class="muted small" style="text-align:center;margin-top:8px">“vs proj” compares actual pace to each runner's roster pace (− = faster).</p>`;
 }
 
 /* ---- Home ---- */
-const APP_VERSION="6.3";
+const APP_VERSION="6.4";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
