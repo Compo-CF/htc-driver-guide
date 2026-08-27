@@ -636,6 +636,27 @@ function renderLegs(){
   });
 }
 
+/* ---- Actual leg times (runner splits) ---- */
+function parseTime(s){
+  s=(s||"").trim(); if(!s)return null;
+  const parts=s.split(":").map(x=>x.trim());
+  if(!parts.length||parts.some(p=>p===""||isNaN(Number(p))))return null;
+  let sec;
+  if(parts.length===1) sec=parseFloat(parts[0])*60;                          // minutes
+  else if(parts.length===2) sec=Number(parts[0])*60+Number(parts[1]);        // MM:SS
+  else if(parts.length===3) sec=Number(parts[0])*3600+Number(parts[1])*60+Number(parts[2]); // H:MM:SS
+  else return null;
+  return sec>0?Math.round(sec):null;
+}
+function fmtDur2(sec){sec=Math.round(sec);const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
+  return h?`${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`:`${m}:${String(s).padStart(2,"0")}`;}
+function fmtPaceSec(sec){sec=Math.round(sec);const m=Math.floor(sec/60),s=sec%60;return `${m}:${String(s).padStart(2,"0")}`;}
+function legTime(n){const v=localStorage.getItem("htc26_time_"+n);return v?Number(v):null;}
+function saveLegTime(n){const el=$("#timeIn");if(!el)return;const sec=parseTime(el.value);
+  if(sec==null){el.style.borderColor="var(--danger)";el.focus();return;}
+  localStorage.setItem("htc26_time_"+n,sec);openLeg(n);}
+function clearLegTime(n){localStorage.removeItem("htc26_time_"+n);openLeg(n);}
+
 function openLeg(n){
   const l=LEGS.find(x=>x.n===n);
   const vanTxt=l.van===0?"Van 1 & 2":"Van "+l.van;
@@ -648,6 +669,7 @@ function openLeg(n){
   }).join("");
   const kv=(k,v)=>v?`<div class="kv"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`:"";
   const rn=TEAM[LEGINFO[n].runner];
+  const rec=legTime(n);
   $("#detailBody").innerHTML=`
     <div class="detail-head">
       <div class="top">
@@ -670,6 +692,20 @@ function openLeg(n){
     <a class="gps-btn" href="${mapsUrl}">📍 Open Exchange in Apple Maps</a>
     ${startMs()?`<div class="addr" style="margin:-4px 4px 10px;color:var(--accent);font-weight:700">🕐 Projected: ${fmtClock(startMs()+legStartMin(n)*60000)} → ${fmtClock(startMs()+legEndMin(n)*60000)}</div>`:""}
     <div class="addr" style="margin:-4px 4px 12px">${esc(l.exch)}<br>GPS ${l.lat}, ${l.lng}</div>
+    <div class="card">
+      <h3>⏱ Your time</h3>
+      ${rec!=null?`
+        <div class="stats" style="margin-top:0">
+          <div class="stat"><div class="v">${fmtDur2(rec)}</div><div class="l">Time</div></div>
+          <div class="stat"><div class="v">${fmtPaceSec(rec/l.mi)}</div><div class="l">Pace /mi</div></div>
+          <div class="stat"><div class="v">${l.mi}</div><div class="l">Miles</div></div>
+        </div>
+        <button class="reset" style="margin-top:10px" onclick="clearLegTime(${n})">Edit / clear</button>`
+      :`
+        <div class="field"><input id="timeIn" class="fuelsel" type="text" inputmode="text" placeholder="Leg time — MM:SS or H:MM:SS"></div>
+        <button class="btn-primary" onclick="saveLegTime(${n})">Save time</button>
+        <p class="muted small" style="margin:8px 2px 0">Pace is calculated from this leg's ${l.mi} mi.</p>`}
+    </div>
     ${alerts}
     <div class="card">
       <h3>Route map</h3>
@@ -1318,7 +1354,7 @@ function renderHotel(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="5.9";
+const APP_VERSION="6.0";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
