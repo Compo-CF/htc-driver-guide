@@ -336,6 +336,9 @@ header.clickable{cursor:pointer}
   <!-- SCHEDULE -->
   <section class="view hidden" id="view-schedule"></section>
 
+  <!-- RESULTS -->
+  <section class="view hidden" id="view-results"></section>
+
   <!-- HOTEL CONFIRMATIONS -->
   <section class="view hidden" id="view-confirm"></section>
 
@@ -586,15 +589,15 @@ const GEAR = ["Two (2) reflective vests","Two (2) LED flashers","Two flashlights
 
 /* ============================ APP ============================ */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const views={home:$("#view-home"),legs:$("#view-legs"),detail:$("#view-detail"),clock:$("#view-clock"),course:$("#view-course"),rules:$("#view-rules"),safety:$("#view-safety"),prep:$("#view-prep"),vans:$("#view-vans"),weather:$("#view-weather"),hotel:$("#view-hotel"),fuel:$("#view-fuel"),schedule:$("#view-schedule"),confirm:$("#view-confirm")};
-const titles={home:"Team Last Milers",legs:"Team Last Milers",clock:"Race Clock",course:"Course",rules:"Race Rules",safety:"Safety",prep:"Prep & Checklists",vans:"Vans",weather:"Weather",hotel:"Hotel",fuel:"Fuel Stops",schedule:"Schedule",confirm:"Hotel Confirmations"};
+const views={home:$("#view-home"),legs:$("#view-legs"),detail:$("#view-detail"),clock:$("#view-clock"),course:$("#view-course"),rules:$("#view-rules"),safety:$("#view-safety"),prep:$("#view-prep"),vans:$("#view-vans"),weather:$("#view-weather"),hotel:$("#view-hotel"),fuel:$("#view-fuel"),schedule:$("#view-schedule"),confirm:$("#view-confirm"),results:$("#view-results")};
+const titles={home:"Team Last Milers",legs:"Team Last Milers",clock:"Race Clock",course:"Course",rules:"Race Rules",safety:"Safety",prep:"Prep & Checklists",vans:"Vans",weather:"Weather",hotel:"Hotel",fuel:"Fuel Stops",schedule:"Schedule",confirm:"Hotel Confirmations",results:"Results"};
 let curTab="legs", curVan="all", curSearch="";
 
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function setTab(t){
   curTab=t;
   const r={home:renderHome,legs:renderLegs,clock:renderClock,course:renderCourse,rules:renderRules,
-    safety:renderSafety,prep:renderPrep,vans:renderVans,weather:renderWeather,hotel:renderHotel,fuel:renderFuel,schedule:renderSchedule,confirm:renderConfirmations}[t];
+    safety:renderSafety,prep:renderPrep,vans:renderVans,weather:renderWeather,hotel:renderHotel,fuel:renderFuel,schedule:renderSchedule,confirm:renderConfirmations,results:renderResults}[t];
   if(r)r();
   Object.values(views).forEach(v=>v.classList.add("hidden"));
   views[t].classList.remove("hidden");
@@ -628,7 +631,7 @@ function renderLegs(){
     const el=document.createElement("div");el.className="leg-item"+(isNow?" leg-now":"");
     el.innerHTML=`<div class="leg-num">${l.n}<span class="van ${l.van===2?'v2':''}">V${vanTxt}</span></div>
       <div class="leg-body">
-        <div class="leg-title">Leg ${l.n} · ${esc(rn.n)} <span class="pill ${l.d}">${l.d}</span>${isNow?' <span class="now-tag">NOW</span>':''}</div>
+        <div class="leg-title">Leg ${l.n} · ${esc(runnerName(l.n))} <span class="pill ${l.d}">${l.d}</span>${isNow?' <span class="now-tag">NOW</span>':''}</div>
         <div class="leg-meta">${timeStr}${l.mi} mi · ${esc(l.exch.split("—")[0].trim())}${l.major?' · ⭐ '+esc(l.major.split('·')[0].trim()):''}</div>
       </div><div class="chev">›</div>`;
     el.onclick=()=>openLeg(l.n);
@@ -673,7 +676,7 @@ function openLeg(n){
   $("#detailBody").innerHTML=`
     <div class="detail-head">
       <div class="top">
-        <div><h2>Leg ${l.n}${n===36?" · Finish":""}</h2><div class="ded">${vanTxt} · 🏃 <b style="color:var(--text)">${esc(rn.n)}</b> · ${rn.p}/mi</div></div>
+        <div><h2>Leg ${l.n}${n===36?" · Finish":""}</h2><div class="ded">${vanTxt} · 🏃 <b style="color:var(--text)">${esc(runnerName(n))}</b> · ${rn.p}/mi</div></div>
         <span class="pill ${l.d}" style="font-size:12px">${({E:"Easy",M:"Moderate",H:"Hard",VH:"Very Hard"})[l.d]}</span>
       </div>
       ${l.major?`<div style="margin-top:8px"><span class="tag" style="background:rgba(255,159,67,.18);color:#ffc98a">⭐ ${esc(l.major)}</span></div>`:""}
@@ -998,6 +1001,9 @@ const VAN_SET={
     ["Good Feeling","Flo Rida"],["September","Earth, Wind & Fire"]]
 };
 function runnerOf(leg){return TEAM[LEGINFO[leg].runner];}
+// Per-leg runner display overrides (who actually runs a given leg, if different from the default rotation)
+const LEG_RUNNER={14:"Barnwell / Churchill",15:"Ray",25:"Milliron / Ray",27:"Churchill"};
+function runnerName(leg){return LEG_RUNNER[leg]||TEAM[LEGINFO[leg].runner].n;}
 function paceMin(p){const [m,s]=String(p).split(":").map(Number);return m+(s||0)/60;}  // "8:45" -> 8.75
 
 const SK={start:"htc26_start",factor:"htc26_pacefactor"};
@@ -1044,7 +1050,7 @@ function renderClock(){
     const li=LEGINFO[cur.n], r=runnerOf(cur.n);
     const toNext=legEndMin(cur.n)-elapsedMin;
     statusHtml=`<div class="status">Now running · <span class="van-chip ${li.van===2?'v2':''}">Van ${li.van}</span>
-      <span class="big">${esc(r.n)} · Leg ${cur.n} <span class="pill ${cur.d}" style="font-size:11px;vertical-align:middle">${cur.d}</span></span>
+      <span class="big">${esc(runnerName(cur.n))} · Leg ${cur.n} <span class="pill ${cur.d}" style="font-size:11px;vertical-align:middle">${cur.d}</span></span>
       Next exchange (${cur.n===36?"Finish":"Exch "+cur.n}) in ~${fmtDur(toNext)} · ETA ${fmtClock(st+legEndMin(cur.n)*60000)}</div>`;
   }
   const rows=LEGS.map(l=>{
@@ -1053,7 +1059,7 @@ function renderClock(){
     const done=elapsedMin>=legEndMin(l.n);
     return `<tr class="${isNow?'nowrow':''} ${done?'doner':''}">
       <td><span class="van-chip ${li.van===2?'v2':''}">V${li.van}</span></td>
-      <td class="legc">Leg ${l.n} · ${esc(r.n)}</td>
+      <td class="legc">Leg ${l.n} · ${esc(runnerName(l.n))}</td>
       <td>${l.mi}</td>
       <td>${fmtClock(st+legStartMin(l.n)*60000)}</td>
       <td>${fmtClock(eta)}</td></tr>`;
@@ -1110,7 +1116,7 @@ function renderVans(){
     <div class="sr-a">${esc(a)}${sub?" · "+esc(sub):""}</div></div>
     <a class="sr-play" href="${spotifySearch(t,a)}" target="_blank" rel="noopener" aria-label="Search on Spotify">▶</a></div>`;
   const van2Legs=[7,8,9,10,11,12,19,20,21,22,23,24,31,32,33,34,35,36];
-  const walk=[]; van2Legs.forEach(l=>legSongs(l).forEach(s=>walk.push(setRow(s.t,s.a,runnerOf(l).n+" · Leg "+l))));
+  const walk=[]; van2Legs.forEach(l=>legSongs(l).forEach(s=>walk.push(setRow(s.t,s.a,runnerName(l)+" · Leg "+l))));
   const setlist=`
     <h2 class="sec">Van 2 set list</h2>
     ${playlist}
@@ -1353,8 +1359,55 @@ function renderHotel(){
    <p class="muted small" style="text-align:center;margin-top:4px">Tap the map to enlarge · map © OpenStreetMap</p>`;
 }
 
+/* ---- Results & analytics (from logged leg times) ---- */
+function deltaStr(sec){const a=fmtPaceSec(Math.abs(sec));return sec<0?`${a} faster`:(sec>0?`${a} slower`:"on pace");}
+function renderResults(){
+  const L=[];
+  LEGS.forEach(l=>{const t=legTime(l.n); if(t!=null){const r=LEGINFO[l.n].runner;
+    L.push({n:l.n,mi:l.mi,sec:t,runner:r,name:runnerName(l.n),van:LEGINFO[l.n].van,pace:t/l.mi,projPace:paceMin(TEAM[r].p)*60});}});
+  if(!L.length){views.results.innerHTML=`<div class="note-box">📊 No leg times logged yet. As runners finish, tap their leg and enter the time under <b>⏱ Your time</b> — results and analytics appear here.<br><br>For full team stats, log every leg's time on one phone (e.g., the captain records each split).</div>`;return;}
+  const totSec=L.reduce((a,b)=>a+b.sec,0), totMi=L.reduce((a,b)=>a+b.mi,0);
+  const projSec=L.reduce((a,b)=>a+b.projPace*b.mi,0);
+  const overall=totSec/totMi, delta=totSec-projSec;
+  const fast=[...L].sort((a,b)=>a.pace-b.pace)[0];
+  const slow=[...L].sort((a,b)=>b.pace-a.pace)[0];
+  const best=[...L].sort((a,b)=>(a.pace-a.projPace)-(b.pace-b.projPace))[0];
+  const complete=L.length===36;
+  const stat=(v,l)=>`<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+  // per runner
+  const runners=[...new Set(L.map(x=>x.runner))].sort((a,b)=>a-b);
+  const rrows=runners.map(r=>{const ls=L.filter(x=>x.runner===r);const s=ls.reduce((a,b)=>a+b.sec,0),mi=ls.reduce((a,b)=>a+b.mi,0);
+    return `<tr><td><span class="van-chip ${ls[0].van===2?'v2':''}">V${ls[0].van}</span></td>
+      <td class="name" style="text-align:left">${esc(TEAM[r].n)}</td><td>${ls.length}/3</td>
+      <td>${fmtDur2(s)}</td><td>${fmtPaceSec(s/mi)}</td></tr>`;}).join("");
+  const lrows=[...L].sort((a,b)=>a.n-b.n).map(x=>{const d=x.pace-x.projPace;
+    return `<tr><td>${x.n}</td><td class="name" style="text-align:left">${esc(x.name)}</td><td>${fmtDur2(x.sec)}</td>
+      <td>${fmtPaceSec(x.pace)}</td><td style="color:${d<0?'var(--e)':(d>0?'var(--h)':'var(--muted)')}">${d<0?'−':(d>0?'+':'')}${fmtPaceSec(Math.abs(d))}</td></tr>`;}).join("");
+  views.results.innerHTML=`
+   <div class="note-box">📊 Analytics from times entered on <b>this phone</b> (${L.length}/36 legs logged).${complete?'':' Log every leg for full team results.'}</div>
+   <div class="detail-head">
+     <div class="stats" style="margin-top:0">
+       ${stat(complete?'🏁 '+fmtDur2(totSec):fmtDur2(totSec), complete?'Team finish':'Time logged')}
+       ${stat(fmtPaceSec(overall),'Overall /mi')}
+       ${stat(totMi.toFixed(1),'Miles')}
+     </div>
+     <div class="status" style="margin-top:12px;text-align:center">vs. roster projection: <b style="color:${delta<0?'var(--e)':'var(--h)'}">${deltaStr(delta)}</b></div>
+   </div>
+   <h2 class="sec">Highlights</h2>
+   <div class="card">
+     <div class="kv"><div class="k">⚡ Fastest leg</div><div class="v">Leg ${fast.n} · ${esc(fast.name)} — ${fmtPaceSec(fast.pace)}/mi</div></div>
+     <div class="kv"><div class="k">🐢 Slowest leg</div><div class="v">Leg ${slow.n} · ${esc(slow.name)} — ${fmtPaceSec(slow.pace)}/mi</div></div>
+     <div class="kv"><div class="k">🎯 Beat pace by most</div><div class="v">Leg ${best.n} · ${esc(best.name)} — ${deltaStr(Math.round((best.pace-best.projPace)*best.mi))} on the leg</div></div>
+   </div>
+   <h2 class="sec">By runner</h2>
+   <div class="tbl-wrap"><table><thead><tr><th>Van</th><th>Runner</th><th>Legs</th><th>Total</th><th>Avg /mi</th></tr></thead><tbody>${rrows}</tbody></table></div>
+   <h2 class="sec">By leg</h2>
+   <div class="tbl-wrap"><table><thead><tr><th>Leg</th><th>Runner</th><th>Time</th><th>Pace</th><th>vs proj</th></tr></thead><tbody>${lrows}</tbody></table></div>
+   <p class="muted small" style="text-align:center;margin-top:8px">“vs proj” compares actual pace to each runner's roster pace (− = faster).</p>`;
+}
+
 /* ---- Home ---- */
-const APP_VERSION="6.0";
+const APP_VERSION="6.1";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -1367,7 +1420,8 @@ const ICON={
   hotel:'<path d="M3 21h18M5 21V6l7-3 7 3v15"/><path d="M9 9h.01M12 9h.01M15 9h.01M9 13h.01M12 13h.01M15 13h.01M10 21v-4h4v4"/>',
   fuel:'<path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M4 10h8"/><path d="M14 8l3 3v7a2 2 0 0 0 2 2 2 2 0 0 0 2-2v-9l-3-3"/>',
   schedule:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7 13h4M7 17h7"/>',
-  confirm:'<path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M7 9h10M7 13h6"/><path d="M15.5 15.5l1.5 1.5 3-3"/>'
+  confirm:'<path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M7 9h10M7 13h6"/><path d="M15.5 15.5l1.5 1.5 3-3"/>',
+  results:'<path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="13" width="3" height="4"/>'
 };
 function goHome(){setTab('home');}
 function renderHome(){
@@ -1379,7 +1433,7 @@ function renderHome(){
       const cur=LEGS.find(l=>el>=legStartMin(l.n)&&el<legEndMin(l.n));
       if(cur){const li=LEGINFO[cur.n], r=runnerOf(cur.n);
         nowCard=`<div class="card" style="cursor:pointer" onclick="setTab('clock')"><h3>⏱ On course now</h3>
-          <p><b>${esc(r.n)}</b> · Van ${li.van} · <b>Leg ${cur.n}</b> — next exchange ETA <b>${fmtClock(st+legEndMin(cur.n)*60000)}</b>. Tap for the race clock ›</p></div>`;}
+          <p><b>${esc(runnerName(cur.n))}</b> · Van ${li.van} · <b>Leg ${cur.n}</b> — next exchange ETA <b>${fmtClock(st+legEndMin(cur.n)*60000)}</b>. Tap for the race clock ›</p></div>`;}
     }
   }
   const btn=(tab,label,sub)=>`<button class="home-btn" onclick="setTab('${tab}')"><svg viewBox="0 0 24 24">${ICON[tab]}</svg><div><div class="t">${label}</div><div class="s">${sub}</div></div></button>`;
@@ -1397,6 +1451,7 @@ function renderHome(){
      ${btn('rules','Rules','Penalties & traffic')}
      ${btn('safety','Safety','Emergency & night gear')}
      ${btn('clock','Race Clock','Who’s running now')}
+     ${btn('results','Results','Times & analytics')}
      ${btn('schedule','Schedule','Weekend itinerary')}
      ${btn('vans','Vans','Who’s in each van')}
      ${btn('weather','Weather','Course forecast')}
