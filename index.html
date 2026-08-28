@@ -201,6 +201,8 @@ nav button.nav-home svg{width:38px;height:38px;padding:8px;box-sizing:border-box
 .sched td.legc{text-align:left;font-weight:600}
 tr.nowrow td{background:rgba(77,163,255,.16);color:#fff;font-weight:800}
 tr.doner td{color:var(--muted2)}
+tr.actualrow td{background:rgba(55,201,138,.1)}
+tr.actualrow td:last-child{color:var(--e);font-weight:800}
 .van-chip{font-size:10px;font-weight:800;padding:1px 5px;border-radius:5px;color:#fff;background:var(--accent2)}
 .van-chip.v2{background:#8b5cf6}
 img.mapimg{width:100%;border-radius:12px;border:1px solid rgba(255,255,255,.1);display:block;background:#fff}
@@ -1061,7 +1063,8 @@ function fmtClock(ms){const d=new Date(ms);let h=d.getHours(),m=d.getMinutes();c
   return h+":"+String(m).padStart(2,"0")+" "+ap;}
 function fmtDur(min){if(min<0)min=0;const h=Math.floor(min/60),m=Math.round(min%60);return h+"h "+String(m).padStart(2,"0")+"m";}
 // each leg is timed by its assigned runner's own pace × the global adjustment factor
-function legDurMin(n){const l=LEGS.find(x=>x.n===n);return l.mi*paceMin(runnerOf(n).p)*factor();}
+function legDurMin(n){const a=legTime(n);if(a!=null)return a/60;  // finished leg: use the actual time
+  const l=LEGS.find(x=>x.n===n);return l.mi*paceMin(runnerOf(n).p)*factor();}
 function legStartMin(n){let t=0;for(let i=1;i<n;i++)t+=legDurMin(i);return t;}
 function legEndMin(n){return legStartMin(n)+legDurMin(n);}
 function totalMin(){return legEndMin(36);}
@@ -1099,14 +1102,15 @@ function renderClock(){
   }
   const rows=LEGS.map(l=>{
     const li=LEGINFO[l.n], r=runnerOf(l.n), eta=st+legEndMin(l.n)*60000;
-    const isNow=elapsedMin>=legStartMin(l.n)&&elapsedMin<legEndMin(l.n);
+    const actual=legTime(l.n)!=null;
+    const isNow=!actual&&elapsedMin>=legStartMin(l.n)&&elapsedMin<legEndMin(l.n);
     const done=elapsedMin>=legEndMin(l.n);
-    return `<tr class="${isNow?'nowrow':''} ${done?'doner':''}">
+    return `<tr class="${isNow?'nowrow':''} ${actual?'actualrow':(done?'doner':'')}">
       <td><span class="van-chip ${li.van===2?'v2':''}">V${li.van}</span></td>
       <td class="legc">Leg ${l.n} · ${esc(runnerName(l.n))}</td>
       <td>${l.mi}</td>
       <td>${fmtClock(st+legStartMin(l.n)*60000)}</td>
-      <td>${fmtClock(eta)}</td></tr>`;
+      <td>${actual?'✓ ':''}${fmtClock(eta)}</td></tr>`;
   }).join("");
   views.clock.innerHTML=`
     <div class="clock-hero">
@@ -1119,7 +1123,7 @@ function renderClock(){
       <button class="reset" id="pDown" style="margin:0;width:50px">−5%</button>
       <button class="reset" id="pUp" style="margin:0;width:50px">+5%</button>
     </div>
-    <h2 class="sec">Projected schedule <span class="progress">tap Clock to refresh</span></h2>
+    <h2 class="sec">Schedule <span class="progress">✓ = actual · rest projected</span></h2>
     <div class="tbl-wrap"><table class="sched">
       <thead><tr><th>Van</th><th>Leg · Runner</th><th>Mi</th><th>Start</th><th>Exch by</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
@@ -1428,7 +1432,7 @@ function renderResults(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="6.7";
+const APP_VERSION="6.8";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
