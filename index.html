@@ -1465,6 +1465,7 @@ function renderResults(){
   const DSC={VH:4,H:3,M:2,E:1}, DLABEL={4:"Brutal",3:"Hard",2:"Moderate",1:"Easy"};
   const pElev=s=>{const t=(s||'').replace(/[−–]/g,'-');const m=t.match(/(-?[\d,]+)\s*\/\s*(-?[\d,]+)/);return m?{up:Math.max(0,+m[1].replace(/,/g,'')),down:Math.abs(+m[2].replace(/,/g,''))}:{up:0,down:0};};
   const comma=n=>Math.round(n).toLocaleString();
+  const PROS=[5]; // Lopez Lomong — the team's only pro/elite runner (Van 1)
   const gradeOf=n=>{const l=LEGS.find(g=>g.n===n);const e=pElev(l.elev);return (e.up-e.down)/(l.mi*5280)*100;};
   const adjOf=n=>{const g=gradeOf(n);return g<0?(-g)*8:-(g)*13;};
   function vanStats(v,ringerAdj){
@@ -1474,15 +1475,15 @@ function renderResults(){
     let done=L.filter(x=>vanOf(x.n)===v);
     let ringer=null;
     if(ringerAdj && done.length){
-      const byR={};done.forEach(x=>{(byR[x.runner]=byR[x.runner]||{s:0,mi:0,name:x.name});byR[x.runner].s+=x.sec;byR[x.runner].mi+=x.mi;});
-      const ranked=Object.entries(byR).map(([r,o])=>({r:+r,name:o.name,pace:o.s/o.mi})).sort((a,b)=>a.pace-b.pace);
-      if(ranked.length>=2){
-        ringer=ranked[0];
-        const core=done.filter(x=>x.runner!==ringer.r);
-        const coreMi=core.reduce((a,b)=>a+b.mi,0);
-        const coreFlat=core.reduce((a,b)=>a+(b.pace+adjOf(b.n))*b.mi,0)/coreMi;      // amateur flat-equiv /mi
-        const coreProj=core.reduce((a,b)=>a+b.projPace*b.mi,0)/coreMi;               // amateur roster proj /mi
-        done=done.map(x=>{ if(x.runner!==ringer.r) return x;
+      // Only the pro(s) get neutralized. Lomong (runner 5) is the sole pro; a van with no pro is left untouched.
+      const pro=done.find(x=>PROS.includes(x.runner));
+      const others=done.filter(x=>!PROS.includes(x.runner));
+      if(pro && others.length){
+        ringer={r:pro.runner,name:pro.name};
+        const coreMi=others.reduce((a,b)=>a+b.mi,0);
+        const coreFlat=others.reduce((a,b)=>a+(b.pace+adjOf(b.n))*b.mi,0)/coreMi;    // amateur flat-equiv /mi
+        const coreProj=others.reduce((a,b)=>a+b.projPace*b.mi,0)/coreMi;             // amateur roster proj /mi
+        done=done.map(x=>{ if(!PROS.includes(x.runner)) return x;
           const g=gradeOf(x.n); const subPace=g<0?coreFlat-(-g)*8:coreFlat+(-g)*13;  // flat-equiv back to this leg's grade
           return {...x,sec:subPace*x.mi,pace:subPace,projPace:coreProj}; });
       }
@@ -1490,7 +1491,7 @@ function renderResults(){
     let tD=0,miD=0,pj=0,gapNum=0;
     done.forEach(x=>{tD+=x.sec;miD+=x.mi;pj+=x.projPace*x.mi;gapNum+=(x.pace+adjOf(x.n))*x.mi;});
     return{done:done.length,miA,climb,dscAvg:dsum/all.length,hard,climbPerMi:climb/miA,
-      rawPace:miD?tD/miD:null,gapPace:miD?gapNum/miD:null,delta:tD-pj,miD,ringer:ringer?ringer.name:null};
+      rawPace:miD?tD/miD:null,gapPace:miD?gapNum/miD:null,delta:tD-pj,miD,ringer:ringer?ringer.name:null,adjusted:!!ringer};
   }
   const A=vanStats(1,RINGER_ADJ), B=vanStats(2,RINGER_ADJ);
   // row helper: win=1 → Van1 better (green), 2 → Van2 better, 0 → neutral; tough marks the harder terrain draw
@@ -1515,7 +1516,7 @@ function renderResults(){
     const gap=Math.abs(A.gapPace-B.gapPace), raw=Math.abs(A.rawPace-B.rawPace);
     const tougher=A.dscAvg>B.dscAvg?1:2;
     if(RINGER_ADJ){
-      verdict=`<div class="note-box" style="margin-top:12px"><b>🏆 Van ${win} still leads — amateur vs amateur.</b> With each van's fastest runner${A.ringer?` (${esc(A.ringer)}`:''}${A.ringer&&B.ringer?' & ':''}${B.ringer?`${A.ringer?'':' ('}${esc(B.ringer)})`:''} swapped for their van's own amateur-core pace, Van ${win} is still <b>${fmtPaceSec(gap)}/mi</b> faster on flat-equivalent terrain (${fmtPaceSec(A.gapPace)} vs ${fmtPaceSec(B.gapPace)}). The gap holds up without the ringers, so it's the whole van — not one fast leg.</div>`;
+      verdict=`<div class="note-box" style="margin-top:12px"><b>🏆 Van ${win} ${win===1?'still leads':'leads'} — amateurs only.</b> With ${A.ringer?`<b>${esc(A.ringer)}</b>`:'the pro'} running at Van 1's own amateur pace (Van 2 untouched — all amateurs), Van ${win} is ${win===1?'still ':''}<b>${fmtPaceSec(gap)}/mi</b> faster on flat-equivalent terrain (${fmtPaceSec(A.gapPace)} vs ${fmtPaceSec(B.gapPace)}). ${win===1?'The lead survives without the ringer — it\'s the whole van, not one fast runner.':'Neutralizing Van 1\'s pro flips the head-to-head.'}</div>`;
     } else {
       verdict=`<div class="note-box" style="margin-top:12px"><b>🏆 Van ${win} is ahead.</b> On flat-equivalent terrain Van ${win} is running <b>${fmtPaceSec(gap)}/mi</b> faster than Van ${lose} (${fmtPaceSec(A.gapPace)} vs ${fmtPaceSec(B.gapPace)}). Raw pace shows a bigger ${fmtPaceSec(raw)}/mi gap — some of that is just the terrain each van drew, not the legs. Toughest overall assignment goes to <b>Van ${tougher}</b> (difficulty ${Math.max(A.dscAvg,B.dscAvg).toFixed(2)} vs ${Math.min(A.dscAvg,B.dscAvg).toFixed(2)}), while Van ${A.climbPerMi>B.climbPerMi?1:2} climbs the most per mile.</div>`;
     }
@@ -1526,11 +1527,11 @@ function renderResults(){
    <h2 class="sec">🥊 Van vs Van</h2>
    <p class="muted small" style="margin:-4px 0 8px">Terrain draw is each van's full 18-leg assignment (the handicap). Performance normalizes pace for hills so it's an apples-to-apples speed check.</p>
    <div class="tbl-wrap"><table class="vv"><thead><tr><th style="text-align:left">🏔 Terrain draw</th><th><span class="van-chip">Van 1</span></th><th><span class="van-chip v2">Van 2</span></th></tr></thead><tbody>${terrainRows}</tbody></table></div>
-   <div class="rtog-wrap"><button class="rtog ${RINGER_ADJ?'on':''}" onclick="toggleRinger()"><span class="dot"></span>${RINGER_ADJ?'Ringer-adjusted: ON — amateur core only':'Ringer-adjusted: OFF'}</button></div>
-   ${RINGER_ADJ&&(A.ringer||B.ringer)?`<p class="muted small" style="margin:2px 0 8px;text-align:center">Swapped for van amateur pace: ${A.ringer?`<b>${esc(A.ringer)}</b> (V1)`:''}${A.ringer&&B.ringer?' · ':''}${B.ringer?`<b>${esc(B.ringer)}</b> (V2)`:''}</p>`:''}
-   <div class="tbl-wrap" style="margin-top:6px"><table class="vv"><thead><tr><th style="text-align:left">🏁 Performance${RINGER_ADJ?' *':''}</th><th><span class="van-chip">Van 1${RINGER_ADJ?'*':''}</span></th><th><span class="van-chip v2">Van 2${RINGER_ADJ?'*':''}</span></th></tr></thead><tbody>${perfRows}</tbody></table></div>
+   <div class="rtog-wrap"><button class="rtog ${RINGER_ADJ?'on':''}" onclick="toggleRinger()"><span class="dot"></span>${RINGER_ADJ?'Ringer-adjusted: ON — Lomong neutralized':'Ringer-adjusted: OFF'}</button></div>
+   ${RINGER_ADJ?`<p class="muted small" style="margin:2px 0 8px;text-align:center">${A.ringer?`<b>${esc(A.ringer)}</b> (Van 1's only pro) run at Van 1's amateur pace · `:''}Van 2 unchanged — all amateurs.</p>`:''}
+   <div class="tbl-wrap" style="margin-top:6px"><table class="vv"><thead><tr><th style="text-align:left">🏁 Performance</th><th><span class="van-chip">Van 1${RINGER_ADJ&&A.adjusted?'*':''}</span></th><th><span class="van-chip v2">Van 2</span></th></tr></thead><tbody>${perfRows}</tbody></table></div>
    ${verdict}
-   <p class="muted small" style="text-align:center;margin-top:6px">🏔 = harder terrain draw. Terrain-adj pace converts each leg to a flat equivalent (undoes ~8 s/mi per 1% downhill, ~13 s/mi per 1% climb).${RINGER_ADJ?' <b>*Ringer-adjusted:</b> each van\'s fastest runner runs their legs at the rest of the van\'s terrain-adjusted pace — amateur vs amateur.':' Toggle <b>Ringer-adjusted</b> to replace each van\'s fastest runner with their amateur core.'}</p>`;
+   <p class="muted small" style="text-align:center;margin-top:6px">🏔 = harder terrain draw. Terrain-adj pace converts each leg to a flat equivalent (undoes ~8 s/mi per 1% downhill, ~13 s/mi per 1% climb).${RINGER_ADJ?' <b>*Ringer-adjusted:</b> Lomong (the team\'s only pro) runs his legs at Van 1\'s amateur-core terrain-adjusted pace; Van 2 is all amateurs and unchanged.':' Toggle <b>Ringer-adjusted</b> to neutralize Lomong (Van 1\'s pro) and compare amateurs only.'}</p>`;
   views.results.innerHTML=`
    <div class="note-box">📊 Live team results — shared across everyone (${L.length}/36 legs logged).${complete?'':' Anyone can log a leg time on its screen and it appears here for all.'}</div>
    <div class="detail-head">
@@ -1558,7 +1559,7 @@ function renderResults(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="7.2";
+const APP_VERSION="7.3";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
