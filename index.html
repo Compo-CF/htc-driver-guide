@@ -144,6 +144,13 @@ td.name{text-align:left;font-weight:600}
 .tclr{background:rgba(255,93,93,.18);color:var(--danger);border:0;width:26px;height:26px;border-radius:7px;
   font-size:12px;font-weight:800;cursor:pointer;line-height:1}
 .tclr:active{background:rgba(255,93,93,.32)}
+.kill-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid rgba(255,255,255,.05)}
+.kill-row:last-of-type{border-bottom:0}
+.kill-row .kill-name{flex:1;font-weight:700;font-size:15px}
+.kill-row .kill-n{min-width:34px;text-align:center;font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.kbtn{width:34px;height:34px;border-radius:9px;border:0;background:var(--bg2);color:var(--text);font-size:18px;font-weight:800;cursor:pointer;line-height:1}
+.kbtn.kadd{background:var(--accent2);color:#fff}
+.kbtn:active{opacity:.8}
 
 /* checklist */
 .chk{display:flex;align-items:center;gap:13px;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,.055);cursor:pointer}
@@ -672,10 +679,16 @@ let TIMES={};
   for(let n=1;n<=36;n++){const v=localStorage.getItem("htc26_time_"+n);if(v!=null&&TIMES[n]==null)TIMES[n]=Number(v);} })();
 function saveTimesLocal(){try{localStorage.setItem("htc26_times",JSON.stringify(TIMES));}catch(e){}}
 function legTime(n){const v=TIMES[n];return v==null?null:Number(v);}
+let KILLS={}; try{KILLS=JSON.parse(localStorage.getItem("htc26_kills")||"null")||{};}catch(e){KILLS={};}
+function saveKillsLocal(){try{localStorage.setItem("htc26_kills",JSON.stringify(KILLS));}catch(e){}}
+function killCount(r){return KILLS[r]||0;}
+function killBump(r,d){const v=Math.max(0,(KILLS[r]||0)+d);KILLS[r]=v;saveKillsLocal();renderVans();
+  ensureFirebase().then(fb=>fb.fs.setDoc(fb.ref,{kills:{[r]:v}},{merge:true})).catch(()=>{});}
 function refreshTimeViews(){
   if(curTab==="results")renderResults();
   else if(curTab==="legs")renderLegs();
   else if(curTab==="clock")renderClock();
+  else if(curTab==="vans")renderVans();
   if(_openLeg&&!views.detail.classList.contains("hidden"))openLeg(_openLeg);
 }
 let _fb=null,_fbLoading=null;
@@ -692,7 +705,7 @@ function ensureFirebase(){
     catch(e){db=fs.getFirestore(app);}
     const ref=fs.doc(db,"htc","results");
     _fb={fs,db,ref};
-    fs.onSnapshot(ref,snap=>{const d=snap.data()||{};TIMES=d.times||{};saveTimesLocal();refreshTimeViews();},err=>{});
+    fs.onSnapshot(ref,snap=>{const d=snap.data()||{};TIMES=d.times||{};KILLS=d.kills||{};saveTimesLocal();saveKillsLocal();refreshTimeViews();},err=>{});
     return _fb;
   })();
   return _fbLoading;
@@ -722,7 +735,7 @@ function openLeg(n){
   $("#detailBody").innerHTML=`
     <div class="detail-head">
       <div class="top">
-        <div><h2>Leg ${l.n}${n===36?" · Finish":""}</h2><div class="ded">${vanTxt} · 🏃 <b style="color:var(--text)">${esc(runnerName(n))}</b> · ${rn.p}/mi</div></div>
+        <div><h2>Leg ${l.n}${n===36?" · Finish":""}</h2><div class="ded">${vanTxt} · 🏃 <b style="color:var(--text)">${esc(runnerName(n))}</b> · ${PACE_OVERRIDE[LEGINFO[n].runner]||rn.p}/mi</div></div>
         <span class="pill ${l.d}" style="font-size:12px">${({E:"Easy",M:"Moderate",H:"Hard",VH:"Very Hard"})[l.d]}</span>
       </div>
       ${l.major?`<div style="margin-top:8px"><span class="tag" style="background:rgba(255,159,67,.18);color:#ffc98a">⭐ ${esc(l.major)}</span></div>`:""}
@@ -1049,6 +1062,8 @@ const VAN_SET={
 function runnerOf(leg){return TEAM[LEGINFO[leg].runner];}
 // Per-leg runner display overrides (who actually runs a given leg, if different from the default rotation)
 const LEG_RUNNER={14:"Barnwell / Churchill",15:"Ray",25:"Milliron / Ray",27:"Churchill"};
+// Manual forward-pace overrides by runner # (min:sec/mi) — used to project their remaining legs
+const PACE_OVERRIDE={8:"9:40",9:"8:15",10:"10:00"};
 function runnerName(leg){return LEG_RUNNER[leg]||TEAM[LEGINFO[leg].runner].n;}
 function paceMin(p){const [m,s]=String(p).split(":").map(Number);return m+(s||0)/60;}  // "8:45" -> 8.75
 
@@ -1063,8 +1078,18 @@ function fmtClock(ms){const d=new Date(ms);let h=d.getHours(),m=d.getMinutes();c
   return h+":"+String(m).padStart(2,"0")+" "+ap;}
 function fmtDur(min){if(min<0)min=0;const h=Math.floor(min/60),m=Math.round(min%60);return h+"h "+String(m).padStart(2,"0")+"m";}
 // each leg is timed by its assigned runner's own pace × the global adjustment factor
-function legDurMin(n){const a=legTime(n);if(a!=null)return a/60;  // finished leg: use the actual time
-  const l=LEGS.find(x=>x.n===n);return l.mi*paceMin(runnerOf(n).p)*factor();}
+// a runner's actual pace (sec/mi) across their finished legs, or null if none logged yet
+function runnerActualPaceSec(r){let sec=0,mi=0;
+  [r,r+12,r+24].forEach(leg=>{const t=legTime(leg);if(t!=null){sec+=t;mi+=LEGS.find(l=>l.n===leg).mi;}});
+  return mi>0?sec/mi:null;}
+function legDurMin(n){
+  const a=legTime(n); if(a!=null)return a/60;                 // finished: actual time
+  const l=LEGS.find(x=>x.n===n), r=LEGINFO[n].runner;
+  if(PACE_OVERRIDE[r]) return l.mi*paceMin(PACE_OVERRIDE[r]);  // manual forward-pace override
+  const ap=runnerActualPaceSec(r);
+  if(ap!=null) return l.mi*ap/60;                             // else project from this runner's real pace
+  return l.mi*paceMin(runnerOf(n).p)*factor();                // no data yet: roster pace × adjustment
+}
 function legStartMin(n){let t=0;for(let i=1;i<n;i++)t+=legDurMin(i);return t;}
 function legEndMin(n){return legStartMin(n)+legDurMin(n);}
 function totalMin(){return legEndMin(36);}
@@ -1172,7 +1197,15 @@ function renderVans(){
     <div class="card"><h3>🏃 Run hype</h3>${VAN_SET.run.map(s=>setRow(s[0],s[1])).join("")}</div>
     <div class="card"><h3>😴 Wake-up</h3>${VAN_SET.wake.map(s=>setRow(s[0],s[1])).join("")}</div>
     <p class="muted small" style="text-align:center">▶ opens a Spotify search. For offline in the dead zone, a Premium user should download the playlist first.</p>`;
-  views.vans.innerHTML=`<div class="note-box">Two vans leapfrog the course, swapping runners at the major exchanges (6, 12, 18, 24, 30). The Van 2 sign is required to access legs 19–23 &amp; 32–36.</div>`+vc(1)+vc(2)+setlist;
+  const v2=[7,8,9,10,11,12];
+  const killTotal=v2.reduce((a,r)=>a+killCount(r),0);
+  const killRows=v2.map(r=>`<div class="kill-row"><span class="kill-name">${esc(TEAM[r].n)}</span>
+    <button class="kbtn" onclick="killBump(${r},-1)">−</button>
+    <span class="kill-n">${killCount(r)}</span>
+    <button class="kbtn kadd" onclick="killBump(${r},1)">+</button></div>`).join("");
+  const kills=`<h2 class="sec">🎯 Van 2 roadkills <span class="progress">${killTotal} total</span></h2>
+    <div class="card">${killRows}<p class="muted small" style="margin:8px 2px 0">Tap + each time you pass another runner. Shared live with the team.</p></div>`;
+  views.vans.innerHTML=`<div class="note-box">Two vans leapfrog the course, swapping runners at the major exchanges (6, 12, 18, 24, 30). The Van 2 sign is required to access legs 19–23 &amp; 32–36.</div>`+vc(1)+vc(2)+kills+setlist;
 }
 
 /* ---- Weather (live when online, last-saved when not) ---- */
@@ -1408,6 +1441,12 @@ function renderResults(){
     return `<tr><td>${x.n}</td><td class="name" style="text-align:left">${esc(x.name)}</td><td>${fmtDur2(x.sec)}</td>
       <td>${fmtPaceSec(x.pace)}</td><td style="color:${d<0?'var(--e)':(d>0?'var(--h)':'var(--muted)')}">${d<0?'−':(d>0?'+':'')}${fmtPaceSec(Math.abs(d))}</td>
       <td><button class="tclr" title="Clear this time" onclick="clearResult(${x.n})">✕</button></td></tr>`;}).join("");
+  const vanOf=n=>LEGINFO[n].runner<=6?1:2;
+  const vrows=[1,2].map(v=>{const ls=L.filter(x=>vanOf(x.n)===v);const s=ls.reduce((a,b)=>a+b.sec,0),mi=ls.reduce((a,b)=>a+b.mi,0);
+    const pj=ls.reduce((a,b)=>a+b.projPace*b.mi,0),dv=s-pj;
+    return `<tr><td><span class="van-chip ${v===2?'v2':''}">Van ${v}</span></td><td>${ls.length}/18</td>
+      <td>${ls.length?fmtDur2(s):'—'}</td><td>${mi.toFixed(1)}</td><td>${ls.length?fmtPaceSec(s/mi):'—'}</td>
+      <td style="color:${dv<0?'var(--e)':(dv>0?'var(--h)':'var(--muted)')}">${ls.length?(dv<0?'−':'+')+fmtPaceSec(Math.abs(dv)):'—'}</td></tr>`;}).join("");
   views.results.innerHTML=`
    <div class="note-box">📊 Live team results — shared across everyone (${L.length}/36 legs logged).${complete?'':' Anyone can log a leg time on its screen and it appears here for all.'}</div>
    <div class="detail-head">
@@ -1418,6 +1457,8 @@ function renderResults(){
      </div>
      <div class="status" style="margin-top:12px;text-align:center">vs. roster projection: <b style="color:${delta<0?'var(--e)':'var(--h)'}">${deltaStr(delta)}</b></div>
    </div>
+   <h2 class="sec">By van</h2>
+   <div class="tbl-wrap"><table><thead><tr><th>Van</th><th>Legs</th><th>Time</th><th>Mi</th><th>Pace</th><th>vs proj</th></tr></thead><tbody>${vrows}</tbody></table></div>
    <h2 class="sec">Highlights</h2>
    <div class="card">
      <div class="kv"><div class="k">⚡ Fastest leg</div><div class="v">Leg ${fast.n} · ${esc(fast.name)} — ${fmtPaceSec(fast.pace)}/mi</div></div>
@@ -1432,7 +1473,7 @@ function renderResults(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="6.8";
+const APP_VERSION="7.0";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
