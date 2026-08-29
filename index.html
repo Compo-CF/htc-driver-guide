@@ -151,6 +151,12 @@ td.name{text-align:left;font-weight:600}
 .kbtn{width:34px;height:34px;border-radius:9px;border:0;background:var(--bg2);color:var(--text);font-size:18px;font-weight:800;cursor:pointer;line-height:1}
 .kbtn.kadd{background:var(--accent2);color:#fff}
 .kbtn:active{opacity:.8}
+.vv-win{color:var(--e);font-weight:800}
+.tough{font-size:12px;opacity:.9}
+table.vv{min-width:0;table-layout:fixed}
+table.vv th:first-child,table.vv td:first-child{text-align:left;width:44%}
+table.vv th,table.vv td{text-align:center;padding-left:6px;padding-right:6px}
+table.vv td{white-space:nowrap}
 
 /* checklist */
 .chk{display:flex;align-items:center;gap:13px;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,.055);cursor:pointer}
@@ -1447,6 +1453,54 @@ function renderResults(){
     return `<tr><td><span class="van-chip ${v===2?'v2':''}">Van ${v}</span></td><td>${ls.length}/18</td>
       <td>${ls.length?fmtDur2(s):'—'}</td><td>${mi.toFixed(1)}</td><td>${ls.length?fmtPaceSec(s/mi):'—'}</td>
       <td style="color:${dv<0?'var(--e)':(dv>0?'var(--h)':'var(--muted)')}">${ls.length?(dv<0?'−':'+')+fmtPaceSec(Math.abs(dv)):'—'}</td></tr>`;}).join("");
+  // ---- Van vs Van (terrain-normalized) ----
+  const DSC={VH:4,H:3,M:2,E:1}, DLABEL={4:"Brutal",3:"Hard",2:"Moderate",1:"Easy"};
+  const pElev=s=>{const t=(s||'').replace(/[−–]/g,'-');const m=t.match(/(-?[\d,]+)\s*\/\s*(-?[\d,]+)/);return m?{up:Math.max(0,+m[1].replace(/,/g,'')),down:Math.abs(+m[2].replace(/,/g,''))}:{up:0,down:0};};
+  const comma=n=>Math.round(n).toLocaleString();
+  function vanStats(v){
+    const all=LEGS.filter(l=>vanOf(l.n)===v);
+    let miA=0,climb=0,desc=0,dsum=0,hard=0;
+    all.forEach(l=>{const e=pElev(l.elev);miA+=l.mi;climb+=e.up;desc+=e.down;dsum+=DSC[l.d];if(l.d==='VH'||l.d==='H')hard++;});
+    const done=L.filter(x=>vanOf(x.n)===v);
+    let tD=0,miD=0,pj=0,gapNum=0;
+    done.forEach(x=>{const l=LEGS.find(g=>g.n===x.n);const e=pElev(l.elev);const grade=(e.up-e.down)/(l.mi*5280)*100;
+      const adj=grade<0?(-grade)*8:-(grade)*13; gapNum+=(x.pace+adj)*x.mi; tD+=x.sec;miD+=x.mi;pj+=x.projPace*x.mi;});
+    return{done:done.length,miA,climb,desc,dscAvg:dsum/all.length,hard,climbPerMi:climb/miA,
+      rawPace:miD?tD/miD:null,gapPace:miD?gapNum/miD:null,delta:tD-pj,miD};
+  }
+  const A=vanStats(1), B=vanStats(2);
+  // row helper: win=1 → Van1 better (green), 2 → Van2 better, 0 → neutral; tough marks the harder terrain draw
+  const vvRow=(lab,a,b,win,tough)=>`<tr><td style="text-align:left">${lab}</td>
+    <td class="${win===1?'vv-win':''}">${a}${tough===1?' <span class="tough">🏔</span>':''}</td>
+    <td class="${win===2?'vv-win':''}">${b}${tough===2?' <span class="tough">🏔</span>':''}</td></tr>`;
+  const terrainRows=
+    vvRow("Distance (18 legs)", A.miA.toFixed(1)+" mi", B.miA.toFixed(1)+" mi", 0, A.miA>B.miA?1:2)+
+    vvRow("Total climb", comma(A.climb)+" ft", comma(B.climb)+" ft", 0, A.climb>B.climb?1:2)+
+    vvRow("Climb / mile", A.climbPerMi.toFixed(1)+" ft", B.climbPerMi.toFixed(1)+" ft", 0, A.climbPerMi>B.climbPerMi?1:2)+
+    vvRow("Hard legs (VH+H)", A.hard+"/18", B.hard+"/18", 0, A.hard>B.hard?1:2)+
+    vvRow("Difficulty index", A.dscAvg.toFixed(2)+" · "+DLABEL[Math.round(A.dscAvg)], B.dscAvg.toFixed(2)+" · "+DLABEL[Math.round(B.dscAvg)], 0, A.dscAvg>B.dscAvg?1:2);
+  const bothRun=A.miD>0&&B.miD>0;
+  const perfRows=
+    vvRow("Legs done", A.done+"/18", B.done+"/18", 0, 0)+
+    vvRow("Raw pace /mi", A.rawPace?fmtPaceSec(A.rawPace):'—', B.rawPace?fmtPaceSec(B.rawPace):'—', bothRun?(A.rawPace<B.rawPace?1:2):0, 0)+
+    vvRow("Terrain-adj pace /mi", A.gapPace?fmtPaceSec(A.gapPace):'—', B.gapPace?fmtPaceSec(B.gapPace):'—', bothRun?(A.gapPace<B.gapPace?1:2):0, 0)+
+    vvRow("vs roster proj", A.miD?(A.delta<0?'−':'+')+fmtPaceSec(Math.abs(A.delta)):'—', B.miD?(B.delta<0?'−':'+')+fmtPaceSec(Math.abs(B.delta)):'—', bothRun?(A.delta<B.delta?1:2):0, 0);
+  let verdict="";
+  if(bothRun){
+    const win=A.gapPace<B.gapPace?1:2, lose=win===1?2:1;
+    const gap=Math.abs(A.gapPace-B.gapPace), raw=Math.abs(A.rawPace-B.rawPace);
+    const tougher=A.dscAvg>B.dscAvg?1:2;
+    verdict=`<div class="note-box" style="margin-top:12px"><b>🏆 Van ${win} is ahead.</b> On flat-equivalent terrain Van ${win} is running <b>${fmtPaceSec(gap)}/mi</b> faster than Van ${lose} (${fmtPaceSec(A.gapPace)} vs ${fmtPaceSec(B.gapPace)}). Raw pace shows a bigger ${fmtPaceSec(raw)}/mi gap — some of that is just the terrain each van drew, not the legs. Toughest overall assignment goes to <b>Van ${tougher}</b> (difficulty ${Math.max(A.dscAvg,B.dscAvg).toFixed(2)} vs ${Math.min(A.dscAvg,B.dscAvg).toFixed(2)}), while Van ${A.climbPerMi>B.climbPerMi?1:2} climbs the most per mile.</div>`;
+  } else {
+    verdict=`<div class="note-box" style="margin-top:12px">Terrain-adjusted head-to-head unlocks once <b>both vans</b> have logged a leg. Terrain draw (above) is fixed for the whole race.</div>`;
+  }
+  const vvBlock=`
+   <h2 class="sec">🥊 Van vs Van</h2>
+   <p class="muted small" style="margin:-4px 0 8px">Terrain draw is each van's full 18-leg assignment (the handicap). Performance normalizes pace for hills so it's an apples-to-apples speed check.</p>
+   <div class="tbl-wrap"><table class="vv"><thead><tr><th style="text-align:left">🏔 Terrain draw</th><th><span class="van-chip">Van 1</span></th><th><span class="van-chip v2">Van 2</span></th></tr></thead><tbody>${terrainRows}</tbody></table></div>
+   <div class="tbl-wrap" style="margin-top:10px"><table class="vv"><thead><tr><th style="text-align:left">🏁 Performance</th><th><span class="van-chip">Van 1</span></th><th><span class="van-chip v2">Van 2</span></th></tr></thead><tbody>${perfRows}</tbody></table></div>
+   ${verdict}
+   <p class="muted small" style="text-align:center;margin-top:6px">🏔 = harder terrain draw. Terrain-adj pace converts each leg to a flat equivalent (undoes ~8 s/mi per 1% downhill, ~13 s/mi per 1% climb).</p>`;
   views.results.innerHTML=`
    <div class="note-box">📊 Live team results — shared across everyone (${L.length}/36 legs logged).${complete?'':' Anyone can log a leg time on its screen and it appears here for all.'}</div>
    <div class="detail-head">
@@ -1459,6 +1513,7 @@ function renderResults(){
    </div>
    <h2 class="sec">By van</h2>
    <div class="tbl-wrap"><table><thead><tr><th>Van</th><th>Legs</th><th>Time</th><th>Mi</th><th>Pace</th><th>vs proj</th></tr></thead><tbody>${vrows}</tbody></table></div>
+   ${vvBlock}
    <h2 class="sec">Highlights</h2>
    <div class="card">
      <div class="kv"><div class="k">⚡ Fastest leg</div><div class="v">Leg ${fast.n} · ${esc(fast.name)} — ${fmtPaceSec(fast.pace)}/mi</div></div>
@@ -1473,7 +1528,7 @@ function renderResults(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="7.0";
+const APP_VERSION="7.1";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
