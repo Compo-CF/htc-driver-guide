@@ -291,6 +291,23 @@ header.clickable{cursor:pointer}
   filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
 .home-hero .hh-tag{font-size:13px;font-weight:700;color:#e7d9b8;font-style:italic;letter-spacing:.2px}
 .home-hero .hh-sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+.congrats{background:linear-gradient(150deg,#12305a 0%,#173a2c 100%);border:1px solid rgba(55,201,138,.35);border-radius:var(--radius);padding:17px 16px 15px;margin-bottom:13px;text-align:center;position:relative;overflow:hidden}
+.congrats:after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(55,201,138,.22),transparent 70%)}
+.congrats .cg-emo{font-size:26px;letter-spacing:4px}
+.congrats h2{font-size:22px;font-weight:900;margin:4px 0 1px;letter-spacing:-.3px}
+.congrats .cg-sub{font-size:12px;color:var(--muted);margin-bottom:13px}
+.congrats .cg-fin{font-size:33px;font-weight:900;color:var(--e);letter-spacing:-.5px;line-height:1}
+.congrats .cg-finl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:4px 0 12px}
+.congrats .cg-stats{display:flex;flex-wrap:wrap;gap:7px;justify-content:center}
+.congrats .cg-stat{flex:1;min-width:84px;background:rgba(255,255,255,.055);border-radius:11px;padding:9px 8px}
+.congrats .cg-stat .v{font-size:17px;font-weight:800}
+.congrats .cg-stat .v small{font-size:11px;color:var(--muted);font-weight:800}
+.congrats .cg-stat .l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.congrats .cg-note{font-size:11.5px;color:var(--muted);margin-top:12px;line-height:1.45}
+.congrats .cg-note b{color:var(--e)}
+.congrats .cg-thanks{font-size:12.5px;color:var(--text);margin-top:12px;line-height:1.52;text-align:left;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px 14px}
+.congrats .cg-thanks b{color:#ffd98a}
+.congrats .cg-thanks .lead{display:block;font-size:14px;font-weight:900;color:var(--text);margin-bottom:5px}
 .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}
 .home-btn{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid rgba(255,255,255,.07);
   border-radius:15px;padding:15px 14px;cursor:pointer;text-align:left;color:var(--text);transition:.12s}
@@ -1559,7 +1576,7 @@ function renderResults(){
 }
 
 /* ---- Home ---- */
-const APP_VERSION="7.3";
+const APP_VERSION="7.4";
 const ICON={
   legs:'<path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 12V6m0 0L9 4"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -1590,6 +1607,24 @@ function renderHome(){
   }
   const btn=(tab,label,sub)=>`<button class="home-btn" onclick="setTab('${tab}')"><svg viewBox="0 0 24 24">${ICON[tab]}</svg><div><div class="t">${label}</div><div class="s">${sub}</div></div></button>`;
   views.home.innerHTML=`
+   <div class="congrats">
+     <div class="cg-emo">🎉🏅🎊</div>
+     <h2>We did it, Last Milers!</h2>
+     <div class="cg-sub">Hood To Coast 2026 · Mt. Hood → Seaside · Aug 28–29</div>
+     <div class="cg-fin">27:13:17</div>
+     <div class="cg-finl">Official finish · 8:19 / mi</div>
+     <div class="cg-stats">
+       <div class="cg-stat"><div class="v">171<small>/1271</small></div><div class="l">Overall</div></div>
+       <div class="cg-stat"><div class="v">22<small>/130</small></div><div class="l">Division</div></div>
+       <div class="cg-stat"><div class="v">196.7</div><div class="l">Miles</div></div>
+       <div class="cg-stat"><div class="v">20,200<small> ft</small></div><div class="l">Vertical</div></div>
+     </div>
+     <div class="cg-note">🚦 And on a clean handoff — minus the ~40 min our van lost to exchange traffic while Lopez waited on us — that's a <b>≈26:33 / 133rd overall</b>. Something to chase next year. 😉</div>
+     <div class="cg-thanks">
+       <span class="lead">Thank you. 💙💧</span>
+       To every <b>runner</b> who emptied the tank across all 36 legs — you are the miles. To our <b>drivers</b>, who beat the vans, the traffic, and the no-sleep math to get everyone to every exchange. To the <b>support crew</b> who kept us fed, hydrated, cheered, and moving through the night. To <b>World Vision</b>, for the mission that turned our 196.7 miles into clean water for kids and families around the world. And to <b>Lopez Lomong</b> — for the speed, the heart, and the pure joy of running alongside an Olympian. Mountain to sea, together. 🏔️→🌊
+     </div>
+   </div>
    <div class="home-hero" style="text-align:center">
      <img class="hero-logo" src="./logo.svg" alt="The Last Milers — 2026 Hood To Coast">
      <div class="hh-tag">The Mother of All Relays</div>
